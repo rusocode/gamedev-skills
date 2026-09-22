@@ -1,0 +1,13 @@
+# Whitelist: ignore everything by default, only my own skills are tracked here.
+# config-gc/, database-migrations/, graphify/, learned/, synced/, and anything
+# installed later stay untracked unless explicitly whitelisted below.
+/*
+!/.gitignore
+!/README.md
+
+!/drawing-pixel-art/
+!/drawing-pixel-art/**
+
+# Python bytecode caches, in case any skill's scripts get run in place.
+__pycache__/
+*.pyc
