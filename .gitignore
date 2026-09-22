@@ -6,7 +6,6 @@
 !/README.md
 
 !/drawing-pixel-art/
-!/drawing-pixel-art/**
 
 # Python bytecode caches, in case any skill's scripts get run in place.
 __pycache__/

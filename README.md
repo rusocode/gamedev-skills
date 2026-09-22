@@ -15,6 +15,5 @@ acá abajo, así que instalar una skill de terceros en este directorio no la met
 2. Sumar al `.gitignore`:
    ```
    !/mi-skill-nueva/
-   !/mi-skill-nueva/**
    ```
 3. Sumarla a la lista de arriba.
