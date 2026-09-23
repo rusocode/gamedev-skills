@@ -1,0 +1,67 @@
+# rasgo: marco de viga recto: dintel horizontal (filas 1-3, cols 2-29) apoyado sobre dos postes de 3 px (cols 2-4 y 27-29), separado por lineas de contorno a mano (fila 4, cols 5 y 26)
+# rasgo: hoja de tablas verticales (cols 6-25) con juntas de 1 px en D en las cols 10, 15 y 20
+# rasgo: dos travesanos horizontales de 4 filas (7-10 y 23-26) que cruzan la hoja sin juntas, con clavos g
+# rasgo: tornapunta diagonal en Z (pendiente 2:1) de la esquina inferior izquierda (fila 22, col 6) a la superior derecha (fila 11, col 25)
+# rasgo: dos bisagras de fleje de hierro (filas 7-9 y 23-25, cols 3-12) montadas sobre el poste izquierdo, y aldaba de anillo 5x5 (cols 20-24, filas 17-21) con pasador en la fila 16
+# sangra: si
+# huecos: 0
+# relieve: madera de la hoja en rampa L l n m k d D en diagonal: tablas claras arriba-izquierda, oscuras abajo-derecha, cada tabla con canto izquierdo claro
+# relieve: marco en rampa propia W H F E C B A: dintel claro arriba y oscuro abajo, postes claros a la izquierda y oscuros a la derecha; el poste derecho mas oscuro
+# relieve: especular W de 2 px en el dintel (fila 1, cols 3-4) y w en la bisagra superior (fila 7, cols 4-5) y en el anillo (fila 17, col 21)
+# relieve: borde oscuro interior: fila 3 del dintel en C/B, fila 30 de la hoja en d, canto inferior d de cada travesano
+# relieve: sombras proyectadas D bajo el dintel (fila 5), bajo cada travesano (filas 11 y 27), a la derecha de la tornapunta y del anillo
+# relieve: dither F/E y C/E en la fila 2 del dintel
+# relieve: textura: vetas de 1 px (col 8 filas 13-14, col 18 fila 6, col 3 filas 13-15, col 28 filas 16-18, fila 2 cols 17-19), nudo en la col 12-13 filas 28-29
+. = transparent
+O = 30,21,16
+L = 178,118,66
+l = 156,100,54
+n = 134,84,44
+m = 114,70,36
+k = 94,57,29
+d = 74,44,23
+D = 54,32,18
+W = 160,120,84
+H = 138,100,68
+F = 118,85,57
+E = 98,70,47
+C = 80,57,38
+B = 63,45,30
+A = 47,34,23
+w = 214,214,204
+I = 150,151,146
+i = 96,97,98
+g = 50,51,54
+
+.OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.
+.OHWWHHHHHHHFFFFFFFFFFEEEEEEEEO.
+.OFFFFFFFFEFEEEEEBBBEEEECECECCO.
+.OCCCCCCCCCCCCCCBBBBBBBBBBBBBBO.
+.OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.
+.OHECOmmmkDmkkkDkkkkDkkkddOECBO.
+.OHECOLllnDlnnmDlnkmDnmmmkOECBO.
+.OFIwwIIIIIILLLLLLLlllllllOECBO.
+.OFiiiiIiiiIinnnngnnmmmgmmOECBO.
+.OFgggggggggmmmmmmmkkkkkkkOECBO.
+.OFECOddddddddddddddddddddOECBO.
+.OFECOnmmmDmkkkDmkkkDkkkkLOECBO.
+.OFECOlnnmDlnmmDnmmkDnmLlnOECBO.
+.OFCCOlnkmDlnmmDnmmkDLlnnmOECBO.
+.OFCCOlnkmDlnmmDnmmLlnnmkDOECBO.
+.OFCCOlnnmDlnmmDnLlnnmkDkkOECBO.
+.OFECOlnnmDlnmmLlnnmkDgmkkOEBBO.
+.OFECOnmmkDnmLlnnmkDDwIikdOEBBO.
+.OFECOnmmkDLlnnmkDkkImkkiDOEBBO.
+.OFECOnmmLlnnmkDmmkkimkkgDOECBO.
+.OFECOnLlnnmkDkDmmkkimkkgDOECBO.
+.OFECOlnnmkDmkkDmmkkDgggDdOECBO.
+.OFECOnmkDDnmkkDmmkkDmDDkdOECBO.
+.OFIIIIIIIIILLLLLLllllllllOECBO.
+.OFiiiiIiiiIinnnmgmmmmkgkkOECBO.
+.OFgggggggggmmmmmkkkkkkkkkOECBO.
+.OFECOddddddddddddddddddddOECBO.
+.OEECOmkkkDkkkdDkkddDkddddOECBO.
+.OECBOnmkkDmdkdDmkkdDkDdddOCBAO.
+.OECBOnmkkDmkndDmkkdDkkdddOCBAO.
+.OCBBOkdddDkdddDddddDdddddOBBAO.
+.OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.

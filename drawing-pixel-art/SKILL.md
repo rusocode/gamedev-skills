@@ -156,6 +156,7 @@ de sombreado, no solo de silueta. Una linea por forma:
 | `door_iron.txt`    | arco de medio punto de dovelas con juntas de mortero sobre jambas rectas, doble hoja de madera y dos herrajes: tres materiales, tres rampas (6+5+3)                         | puertas, portones, ventanas con arco, arcadas, muros de piedra, cofres con herrajes |
 | `gold.txt`         | seis monedas de frente (circulos D=12/10/8) solapadas con contorno de 1 px a mano entre ellas; canto claro/oscuro, especular, cara hundida, emblema 2x2                     | pilas de monedas, botones, fichas, escudos redondos, engranajes                     |
 | `chicken.txt`      | cuerpo redondeado de costado + muslo ovalado delante con anillo de contorno a mano + dos huesos de 2 px de relleno con punta de dos nudos; piel en rampa D d n m l L, hueso B b c | comida asada (pollo, pierna, jamon), carnes, animales de costado, piezas con hueso |
+| `wood_door.txt`    | marco recto de viga (dintel sobre dos postes) + hoja de tablas con juntas D, dos travesaños, tornapunta en Z con pendiente 2:1, bisagras de fleje y aldaba de anillo; tres rampas (hoja 7, marco 7, hierro 4) | puertas y portones de madera, cajas, barriles de frente, empalizadas, carteles de tablas |
 
 **Variantes de color.** Cuando dos sprites comparten la grilla y solo cambian tonos (pocion roja / azul / verde),
 no se duplica el mapa: el mapa base declara `# variante nombre: sym=R,G,B[,A]; sym=...` por cada colorway y se
@@ -196,6 +197,10 @@ por caracter; portar tambien las validaciones, que son lo que hace util al scrip
 
 ## Señales de alarma — parar y volver al mapa
 
+- "Me pidieron el sprite nombrando el archivo que reemplaza, asi que copiarlo al repo ya esta autorizado" — no.
+  "Crea X que reemplace Y.png" es **el encargo**, no la aprobacion. El PNG y su mapa se entregan en la carpeta de
+  borradores con el preview y ahi se para, hasta que el usuario apruebe en un mensaje posterior. Lo mismo vale para
+  sumar el mapa a `examples/`.
 - `audit` dice **REDRAW** y me pongo a dibujar sin preguntar si la silueta se conserva — la auditoria decide la
   tecnica (si los pixeles se reaprovechan o hay que recolocarlos), **no** si el objeto puede cambiar de forma. Eso
   es del usuario: redibujar conservando la silueta usa el original como plano; rediseñar lo descarta. Preguntar
