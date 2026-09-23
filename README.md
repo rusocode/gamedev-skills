@@ -4,7 +4,7 @@ Colección de skills personales.
 
 ## Skills
 
-- **drawing-pixel-art** — genera y edita sprites pixel art (32x32, etc.) para juegos 2D a partir de un mapa de
+- **[drawing-pixel-art](drawing-pixel-art/SKILL.md)** — genera y edita sprites pixel art (32x32, etc.) para juegos 2D a partir de un mapa de
   caracteres, con validaciones de contorno, huecos y simetría.
 
 ## Agregar una skill nueva
