@@ -4,6 +4,7 @@
 Map file format (UTF-8 text):
 
     # rasgo: bulbo redondo           '# rasgo:' / '# feature:' lines are echoed back as a checklist
+    # relieve: especular 2x2 en (4,3) '# relieve:' / '# relief:' lines are the shading checklist, echoed back the same way
     # huecos: 0                      '# huecos: N' / '# holes: N' fails the render unless the silhouette has N enclosed holes
     # simetria: x                    '# simetria: x|y|xy' / '# symmetry:' fails unless the silhouette mirrors across that axis
     # espejo: x                      '# espejo: x|y|xy' / '# mirror:' draw only the left/top half; transparent cells on the
@@ -24,6 +25,7 @@ Symbols are case-sensitive. The symbol mapped to the word "transparent" is the b
 Usage:
     python scripts/pixelmap.py render   --map x.txt --out x.png [--width 32 --height 32] [--auto-outline] [--preview 8] [--variant azul]
     python scripts/pixelmap.py from-png --png x.png --out x.txt [--palette old.txt] [--variant azul]
+    python scripts/pixelmap.py audit    --png x.png
 """
 import argparse
 import re
@@ -33,6 +35,9 @@ from collections import deque
 from PIL import Image
 
 PREVIEW_BG = (90, 110, 70, 255)
+FLAT_CHECK_MIN_SIDE = 24    # smaller icons legitimately have few tones
+FLAT_MIN_TONES = 6          # fill symbols (outline excluded) below this = flat
+FLAT_MAX_DOMINANT = 40      # % of fill pixels in one tone above this = flat
 DIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
@@ -54,6 +59,8 @@ def color_text(rgba):
 
 HEADER_RE = {
     "feature": re.compile(r"^\s*#\s*(?:feature|rasgo)\s*:\s*(.+?)\s*$"),
+    "relief": re.compile(r"^\s*#\s*(?:relief|relieve)\s*:\s*(.+?)\s*$"),
+    "bleed": re.compile(r"^\s*#\s*(?:bleed|sangra)\s*:\s*(?:si|s|yes|y|true)\s*$", re.I),
     "holes": re.compile(r"^\s*#\s*(?:holes|huecos)\s*:\s*(\d+)\s*$"),
     "symmetry": re.compile(r"^\s*#\s*(?:symmetry|simetria)\s*:\s*([xy]{1,2})\s*$", re.I),
     "mirror": re.compile(r"^\s*#\s*(?:mirror|espejo)\s*:\s*([xy]{1,2})\s*$", re.I),
@@ -64,7 +71,7 @@ PALETTE_RE = re.compile(r"^\s*(\S)\s*=\s*(.+?)\s*$")
 
 def parse_map(path):
     """Returns dict: palette {sym: rgba}, transparent, rows, features, holes, symmetry, mirror, variants, header."""
-    m = {"palette": {}, "transparent": None, "rows": [], "features": [], "holes": None,
+    m = {"palette": {}, "transparent": None, "rows": [], "features": [], "relief": [], "bleed": False, "holes": None,
          "symmetry": "", "mirror": "", "variants": {}, "header": []}
     in_grid = False
     with open(path, encoding="utf-8-sig") as f:
@@ -79,6 +86,10 @@ def parse_map(path):
                     m["header"].append(line)
                     if (mt := HEADER_RE["feature"].match(line)):
                         m["features"].append(mt.group(1))
+                    elif (mt := HEADER_RE["relief"].match(line)):
+                        m["relief"].append(mt.group(1))
+                    elif HEADER_RE["bleed"].match(line):
+                        m["bleed"] = True
                     elif (mt := HEADER_RE["holes"].match(line)):
                         m["holes"] = int(mt.group(1))
                     elif (mt := HEADER_RE["symmetry"].match(line)):
@@ -173,6 +184,7 @@ def render(args):
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     px = img.load()
     leaks = []
+    fill_count = {}
     min_x, min_y, max_x, max_y = w, h, -1, -1
     for y in range(h):
         for x in range(w):
@@ -191,6 +203,8 @@ def render(args):
                     if args.auto_outline:
                         color = palette[args.outline_symbol]
                     leaks.append(f"({x},{y}) '{ch}'")
+            if color != palette.get(args.outline_symbol):
+                fill_count[ch] = fill_count.get(ch, 0) + 1
             px[x, y] = color
     if errors:
         raise MapError("\n".join(errors))
@@ -210,7 +224,27 @@ def render(args):
         if cov < 70:
             out.append("WARNING: sprite uses under 70% of the canvas; enlarge the silhouette unless the sprite is meant to be small")
         if min_x == 0 or min_y == 0 or max_x == w - 1 or max_y == h - 1:
-            out.append("WARNING: sprite touches the canvas edge; leave 1-2 px of margin")
+            if m["bleed"]:
+                out.append("bleed: sprite fills its cell to the edge, as declared")
+            else:
+                out.append("WARNING: sprite touches the canvas edge; leave 1-2 px of margin "
+                           "(a door, tile or backdrop that fills its cell declares '# sangra: si')")
+
+        # Relief: a sprite whose fill is a few flat blocks passes every silhouette check and still looks flat.
+        # Calibrated on 32x32 items: flat ones had 4 fill tones with 43-45% in one tone, detailed ones 7 tones and 33%.
+        fill_total = sum(fill_count.values())
+        if fill_total and max(bw, bh) >= FLAT_CHECK_MIN_SIDE:
+            tones = sorted(fill_count.items(), key=lambda kv: -kv[1])
+            dom_sym, dom_n = tones[0]
+            dom_pct = round(100 * dom_n / fill_total)
+            out.append(f"fill tones: {len(tones)} (" + " ".join(f"'{k}'={round(100*v/fill_total)}%" for k, v in tones)
+                       + f"); dominant '{dom_sym}' covers {dom_pct}% of the fill")
+            if len(tones) < FLAT_MIN_TONES:
+                failures.append(f"PLANO: only {len(tones)} fill tones; a sprite this size needs at least {FLAT_MIN_TONES} "
+                                "(ramp of 5-6 per material plus glint). Add tones, do not shrink the sprite.")
+            if dom_pct > FLAT_MAX_DOMINANT:
+                failures.append(f"PLANO: '{dom_sym}' covers {dom_pct}% of the fill (max {FLAT_MAX_DOMINANT}%); the faces are flat "
+                                "blocks. Break them with ramp steps, dither at tone borders, glint, dimples and an inner dark rim.")
 
         # Enclosed transparent regions = holes (a ring, the gap between bow and string, a handle opening).
         seen = [[False] * w for _ in range(h)]
@@ -273,6 +307,12 @@ def render(args):
     if m["features"]:
         out.append("CHECK each feature in the preview and state where it is (rows/cols) in your report:")
         out.extend(f"  [ ] {f}" for f in m["features"])
+    if m["relief"]:
+        out.append("CHECK each relief item in the preview (it must be visible at 8x, not just present in the map):")
+        out.extend(f"  [ ] {r}" for r in m["relief"])
+    elif max_x >= 0 and max(max_x - min_x + 1, max_y - min_y + 1) >= FLAT_CHECK_MIN_SIDE:
+        failures.append("no '# relieve:' lines: declare the shading (ramp, glint, dither, dimples, inner rim) before rendering; "
+                        "the map is the spec, the render is the check")
 
     if args.preview > 0:
         big = img.resize((w * args.preview, h * args.preview), Image.NEAREST)
@@ -376,6 +416,82 @@ def from_png(args):
         print("kept header declarations from the old map; render to confirm '# huecos'/'# simetria' still hold")
 
 
+# ----------------------------------------------------------------------------- audit
+
+def audit(args):
+    """Measure an existing PNG against the skill's contract and say which mode fits.
+
+    Answers the question you have before touching an existing sprite: is this authored pixel art
+    that can be reopened as a map, or a painted/downscaled image that has to be redrawn?
+    """
+    img = Image.open(args.png).convert("RGBA")
+    w, h = img.size
+    get = img.load()
+    px = [get[x, y] for y in range(h) for x in range(w) if get[x, y][3] > 0]
+    if not px:
+        raise MapError(f"{args.png} is fully transparent")
+    counts = {}
+    for p in px:
+        counts[p] = counts.get(p, 0) + 1
+    once = sum(1 for v in counts.values() if v == 1)
+    semi = sum(1 for p in px if p[3] < 255)
+
+    def opaque(x, y):
+        return 0 <= x < w and 0 <= y < h and get[x, y][3] > 0
+    edge = [get[x, y] for y in range(h) for x in range(w)
+            if get[x, y][3] > 0 and not all(opaque(x + dx, y + dy) for dx, dy in DIRS)]
+    def lum(c):
+        return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
+    edge_lum = sorted(lum(c) for c in edge)
+    edge_med = edge_lum[len(edge_lum) // 2]
+    edge_max = edge_lum[-1]
+    # The outline is the darkest colour; everything else is fill.
+    outline = min(counts, key=lambda c: lum(c))
+    fill = {c: n for c, n in counts.items() if c != outline}
+    fill_total = sum(fill.values()) or 1
+    dom = max(fill.values()) / fill_total
+
+    xs = [x for y in range(h) for x in range(w) if get[x, y][3] > 0]
+    ys = [y for y in range(h) for x in range(w) if get[x, y][3] > 0]
+    bw, bh = max(xs) - min(xs) + 1, max(ys) - min(ys) + 1
+    cov = round(100 * max(bw / w, bh / h))
+
+    out = [f"{args.png}: {w}x{h}, {len(px)} opaque px, bbox {bw}x{bh} ({cov}% of the canvas)",
+           f"colours: {len(counts)} ({once} used by a single pixel, {semi} semi-transparent)",
+           f"fill tones: {len(fill)}, dominant covers {round(100 * dom)}%",
+           f"edge pixels: {len(edge)}, median luminance {edge_med:.0f}, brightest {edge_max:.0f}"]
+
+    authored = len(counts) <= args.max_colors and once <= len(counts) * 0.15
+    has_outline = edge_med <= 90
+    flat = len(fill) < FLAT_MIN_TONES or dom * 100 > FLAT_MAX_DOMINANT
+
+    verdict = []
+    if not authored:
+        verdict.append(f"PAINTED: {len(counts)} colours, {once} of them used once. This was made with a soft brush "
+                       "or downscaled from a bigger image, not placed pixel by pixel. 'from-png' will refuse it and "
+                       "it is not a style reference -- only a reference for WHAT the object is.")
+    if not has_outline:
+        verdict.append(f"NO OUTLINE: the border's median luminance is {edge_med:.0f} (brightest {edge_max:.0f}); "
+                       "the sprite dissolves into the background. Step 6.")
+    if flat:
+        verdict.append(f"FLAT: {len(fill)} fill tones, dominant {round(100 * dom)}% "
+                       f"(needs >= {FLAT_MIN_TONES} tones and <= {FLAT_MAX_DOMINANT}%). Step 7.")
+    if cov < 70:
+        verdict.append(f"SMALL: fills {cov}% of the canvas. Step 3.")
+
+    if not verdict:
+        out.append("VERDICT: meets the contract. Nothing to fix unless the drawing itself is wrong.")
+    elif authored:
+        out.append("VERDICT: authored pixel art -> RETOUCH. Rebuild the map with 'from-png', fix it there and "
+                   "re-render; everything you do not touch stays identical pixel for pixel.")
+        out.extend("  - " + v for v in verdict)
+    else:
+        out.append("VERDICT: not reopenable as a map -> REDRAW. Ask whether the silhouette is worth keeping: if the "
+                   "composition reads, copy it and redraw the shading; if it does not, redesign from scratch.")
+        out.extend("  - " + v for v in verdict)
+    print(chr(10).join(out))
+
+
 # ----------------------------------------------------------------------------- cli
 
 def main(argv=None):
@@ -403,8 +519,13 @@ def main(argv=None):
     f.add_argument("--transparent-symbol", default=".")
     f.add_argument("--outline-symbol", default="O")
     f.add_argument("--tolerance", type=int, default=2, help="max per-channel distance to reuse an existing symbol")
-    f.add_argument("--max-new-colors", type=int, default=8, help="refuse when more colors than this are unknown (anti-aliasing)")
+    f.add_argument("--max-new-colors", type=int, default=32, help="refuse when more colors than this are unknown (anti-aliasing)")
     f.set_defaults(func=from_png)
+
+    a = sub.add_parser("audit", help="measure an existing PNG and say whether to retouch or redraw it")
+    a.add_argument("--png", required=True)
+    a.add_argument("--max-colors", type=int, default=32, help="above this many colours a PNG is treated as painted")
+    a.set_defaults(func=audit)
 
     args = p.parse_args(argv)
     try:
