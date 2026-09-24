@@ -1,99 +1,155 @@
-# Guia de uso
+<div align="center">
 
-Esta guia es para el **usuario**: que decir para que la skill haga lo que queres. El **como** se dibuja esta en
-[`SKILL.md`](SKILL.md), que lo lee el agente.
+# Drawing Pixel Art
 
-La skill dibuja sprites como mapas de caracteres (un caracter = un pixel) y los compila a PNG
-con [`scripts/pixelmap.py`](scripts/pixelmap.py), que ademas valida contorno, huecos, simetria, encuadre y relieve.
-Las siluetas ya resueltas viven en [`examples/`](examples/) y las plantillas de curvas (circulos por diametro) en
+**Skill para agentes que dibuja y retoca sprites en pixel art, píxel por píxel, con validación automática.**
+
+![Python 3](https://img.shields.io/badge/python-3.x-3776AB?logo=python&logoColor=white)
+![Pillow](https://img.shields.io/badge/deps-Pillow-8CAAE6)
+![Sprites](https://img.shields.io/badge/sprites-16%E2%80%9364%20px-2E7D32)
+
+<img src="example.png" alt="Escudo de madera antes y después del redibujo" width="560">
+
+<sub>Encargo real: <i>"arreglá el item wood_shield.png"</i>. El original (<code>before</code>) era pixel art pintado o
+reducido, y el <code>audit</code> lo marcó <b>REDRAW</b>. Se conservó la silueta como plano y se redibujó píxel a píxel
+(<code>after</code>). Mapa en <a href="examples/wood_shield.txt"><code>examples/wood_shield.txt</code></a>.</sub>
+
+</div>
+
+---
+
+Esta guía es para el **usuario**: qué pedir para que la skill haga lo que querés. El **cómo** se dibuja está en
+[`SKILL.md`](SKILL.md), que es lo que lee el agente.
+
+## Contenido
+
+- [Cómo funciona](#cómo-funciona)
+- [Instalación](#instalación)
+- [Qué modelo conviene](#qué-modelo-conviene)
+- [Cómo pedirle cosas](#cómo-pedirle-cosas)
+- [Qué decide la skill y qué decidís vos](#qué-decide-la-skill-y-qué-decidís-vos)
+- [Cuándo conviene explicar el motivo](#cuándo-conviene-explicar-el-motivo)
+- [Qué pasa después](#qué-pasa-después)
+- [Estructura](#estructura)
+
+## Cómo funciona
+
+Los sprites se escriben como **mapas de caracteres** (un carácter = un píxel = un color de la paleta) y se compilan
+a PNG con [`scripts/pixelmap.py`](scripts/pixelmap.py):
+
+```
+mapa .txt  ──►  pixelmap.py render  ──►  PNG + preview 8x
+                      │
+                      └─ valida contorno, huecos, simetría, encuadre y relieve
+```
+
+Las siluetas ya aprobadas viven en [`examples/`](examples/) y las plantillas de curvas (círculos por diámetro) en
 [`references/shapes.md`](references/shapes.md).
 
-![](example.png)
+## Instalación
 
-*Encargo real: "arregla el item wood_shield.png". El original (`before`) era pixel art pintado/reducido — el
-`audit` de `pixelmap.py` lo marco REDRAW. Se conservo la silueta como plano y se redibujo pixel a pixel (`after`): mapa
-en [`examples/wood_shield.txt`](examples/wood_shield.txt).*
+Copiá la carpeta `drawing-pixel-art/` donde tu agente busque skills (`~/.claude/skills/`, `~/.agents/skills/` o
+el directorio que corresponda):
 
-## Instalacion
+```bash
+git clone https://github.com/rusocode/ruso-skills.git
+cp -r ruso-skills/drawing-pixel-art ~/.claude/skills/
+```
 
-Cloná esta carpeta donde tu agente busque skills (`~/.claude/skills/`, `~/.agents/skills/`, o el directorio que
-corresponda). Necesitas Python 3 con Pillow (`pip install pillow`).
+**Requisitos:** Python 3 y Pillow.
 
-## Que modelo conviene
+```bash
+pip install pillow
+```
 
-El dibujo lo hace el modelo mas fuerte que tengas a mano, con el razonamiento extendido activo: en la
-practica, **Opus**. La razon no es preferencia — `pixelmap.py` valida contorno, huecos, simetria, encuadre
-y que el sprite no sea plano, pero **no valida que el dibujo sea bueno**. Un sprite puede pasar el audit
-entero y tener igual el reborde en 3 tonos, ninguna textura y un degradado que no sigue el volumen.
+## Qué modelo conviene
 
-Medido sobre el mismo encargo (arreglar un `wood_shield.png` de 32x32, ambos conservando la silueta):
+El dibujo lo tiene que hacer el modelo más fuerte que tengas a mano, con el razonamiento extendido activo; en la
+práctica, **Opus**. No es una preferencia: `pixelmap.py` valida contorno, huecos, simetría, encuadre y que el
+sprite no sea plano, pero **no valida que el dibujo sea bueno**. Un sprite puede pasar el audit entero y aun así
+tener el reborde en 3 tonos, ninguna textura y un degradado que no sigue el volumen.
+
+Medido sobre el mismo encargo (arreglar un `wood_shield.png` de 32x32, conservando la silueta en ambos casos):
 
 |                              | Sonnet    | Opus                       |
-|------------------------------|-----------|----------------------------|
+|------------------------------|:---------:|:--------------------------:|
 | Veredicto del audit          | pasa      | pasa                       |
-| Silueta                      | D=28, 88% | D=28, 88% (identica)       |
+| Silueta                      | D=28, 88% | D=28, 88% (idéntica)       |
 | Tonos de relleno / dominante | 11 / 26%  | 14 / 15%                   |
 | Reborde perimetral           | 3 tonos   | 7 tonos (bisel por normal) |
 | Remaches / vetas             | 0 / 0     | 8 / 8                      |
 
-Los dos entregan un escudo redondo reconocible y los dos pasan todas las validaciones. La diferencia esta
-entera en el paso 7 (relieve y textura), que es justo lo que ningun script puede medir por vos. Si el
-sprite te sale correcto pero soso, revisa con que modelo lo pediste antes de tocar el mapa.
+Los dos entregan un escudo redondo reconocible y los dos pasan todas las validaciones. La diferencia está entera en
+el paso 7 (relieve y textura), que es justo lo que ningún script puede medir por vos.
 
-## Ejemplos tipicos de uso
+> [!TIP]
+> Si el sprite sale correcto pero soso, revisá con qué modelo lo pediste antes de tocar el mapa.
 
-| Que queres                                                   | Prompt                                  |
-|--------------------------------------------------------------|-----------------------------------------|
-| Un sprite nuevo                                              | `Crea el sprite de una antorcha, 32x32` |
-| Arreglar uno existente                                       | `Arregla el sprite ruta/X.png`          |
-| Un cambio concreto en uno existente                          | `Sacale la piedrita a ruta/stone.png`   |
-| Otro color del mismo sprite                                  | `Agrega una variante verde a la pocion` |
-| Devolverle la fuente al mapa despues de editar el PNG a mano | `Edite a mano X.png, actualiza su mapa` |
+## Cómo pedirle cosas
 
-Detalles que valen la pena:
+| Qué querés                                                     | Prompt                                   |
+|----------------------------------------------------------------|------------------------------------------|
+| Un sprite nuevo                                                | `Creá el sprite de una antorcha, 32x32`  |
+| Arreglar uno existente                                         | `Arreglá el sprite ruta/X.png`           |
+| Un cambio concreto en uno existente                            | `Sacale la piedrita a ruta/stone.png`    |
+| Otro color del mismo sprite                                    | `Agregá una variante verde a la poción`  |
+| Devolverle la fuente al mapa después de editar el PNG a mano   | `Edité a mano X.png, actualizá su mapa`  |
 
-- **Deci "sprite", "textura", "item" o "icono"** en algun lado: es lo que activa la skill.
-- **No digas "retoca" ni "redibuja"**. Esos son el *resultado* del diagnostico, no la orden — pedir
-  "retoca" sobre un sprite pintado de 200 colores es imposible y la instruccion se contradice sola.
+Detalles que vale la pena tener en cuenta:
+
+- **Decí "sprite", "textura", "item" o "icono"** en algún lado: es lo que activa la skill.
+- **No digas "retocá" ni "redibujá".** Eso es el *resultado* del diagnóstico, no la orden. Pedir "retocá" sobre
+  un sprite pintado de 200 colores es imposible y la instrucción se contradice sola.
 - **El tamaño no hace falta** si el sprite ya existe: sale del archivo.
 
-## Que decide la skill y que decidis vos?
+## Qué decide la skill y qué decidís vos
 
-Antes de tocar un sprite existente, la skill corre `pixelmap.py audit --png X.png`, que **mide** el
-archivo y dicta la tecnica:
+Antes de tocar un sprite existente, la skill corre `pixelmap.py audit --png X.png`, que **mide** el archivo y
+dicta la técnica:
 
-- **RETOUCH** — es pixel art autorado: se reabre el PNG como mapa, se corrige ahi, y todo lo que no se
-  toca queda identico pixel a pixel.
-- **REDRAW** — esta pintado con pincel suave o reducido de una imagen grande, asi que los pixeles hay
-  que recolocarlos a mano.
+| Veredicto   | Diagnóstico                                          | Qué se hace                                                                                  |
+|-------------|------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| **RETOUCH** | Es pixel art autorado.                               | Se reabre el PNG como mapa y se corrige ahí. Todo lo que no se toca queda idéntico píxel a píxel. |
+| **REDRAW**  | Está pintado con pincel suave o reducido de una imagen grande. | Los píxeles hay que recolocarlos a mano.                                           |
 
-Eso es lo unico que la medicion resuelve. Cuando da REDRAW queda **una** pregunta, que es tuya:
+Eso es lo único que la medición resuelve. Cuando da REDRAW queda **una** pregunta, y es tuya:
 
-> ¿se conserva la silueta o no?
+> **¿Se conserva la silueta o no?**
+>
+> - **Se conserva** → el original sirve de plano: misma forma y composición, píxeles y sombreado nuevos.
+> - **No se conserva** → rediseño: la forma se dibuja de cero.
 
-- **Se conserva** → el original sirve de plano: misma forma y composicion, pixeles y sombreado nuevos.
-- **No se conserva** → rediseño: la forma se dibuja de cero.
+Si no lo aclarás, la skill pregunta antes de dibujar la primera fila. Lo podés adelantar con media línea:
+`…, conservando la silueta` o `…, la silueta podés cambiarla si no se lee`.
 
-Si no lo aclaras, la skill pregunta antes de dibujar la primera fila. Lo podes adelantar con media
-linea: `..., conservando la silueta` o `..., la silueta podes cambiarla si no se lee`.
+## Cuándo conviene explicar el motivo
 
-## Cuando conviene explicar el motivo?
+No hace falta justificar lo que la auditoría ya mide: colores de más, falta de contorno, sprite plano, encuadre
+chico. Sí hace falta cuando el problema es el **dibujo**, porque eso no lo mide nadie:
 
-No hace falta justificar lo que la auditoria ya mide: colores de mas, falta de contorno, sprite plano,
-encuadre chico. Si hace falta cuando el problema es el **dibujo**, porque eso no lo mide nadie:
+- *"no se entiende qué es"*
+- *"la silueta está mal, no la uses de referencia"*
+- *"la pose es rara"*
+- *"las monedas parecen galletitas"*
 
-- "no se entiende que es"
-- "la silueta esta mal, no la uses de referencia"
-- "la pose es rara"
-- "las monedas parecen galletitas"
+## Qué pasa después
 
-## Que pasa despues
+1. Todo el trabajo sale en una carpeta de borradores fuera de los assets reales (`sandbox/` del proyecto si existe;
+   si no, el scratchpad del entorno).
+2. Te llega el PNG con un **preview ampliado 8x**: a 1x no se juzga nada.
+3. **Nada entra al repo hasta que lo apruebes.** Recién ahí el PNG va a la carpeta de texturas y el mapa `.txt` a
+   `examples/`, que es la biblioteca de siluetas de la que parten los sprites siguientes.
 
-1. Todo el trabajo sale en una carpeta de borradores fuera de los assets reales (`sandbox/` del
-   proyecto si existe, si no el scratchpad del entorno).
-2. Te llega el PNG con un **preview ampliado 8x** — a 1x no se juzga nada.
-3. **Nada entra al repo hasta que aprobes.** Recien ahi el PNG va a la carpeta de texturas y el mapa
-   `.txt` a `examples/`, que es la biblioteca de siluetas de la que parten los sprites siguientes.
+> [!NOTE]
+> Corregir el PNG vos mismo en un editor es parte del flujo, no una excepción: se reimporta con `from-png` y el mapa
+> vuelve a ser la fuente.
 
-Corregir el PNG vos mismo en un editor es parte del flujo, no una excepcion: se reimporta con
-`from-png` y el mapa vuelve a ser la fuente.
+## Estructura
+
+| Ruta                                           | Qué es                                                                |
+|------------------------------------------------|-----------------------------------------------------------------------|
+| [`SKILL.md`](SKILL.md)                         | Instrucciones para el agente: el proceso de dibujo paso a paso.       |
+| [`scripts/pixelmap.py`](scripts/pixelmap.py)   | CLI con `render` (mapa → PNG), `from-png` (PNG → mapa) y `audit`.     |
+| [`scripts/bands.py`](scripts/bands.py)         | Ayudas para rebordes de ancho constante y bisel según la luz.         |
+| [`examples/`](examples/)                       | Mapas aprobados: la biblioteca de siluetas.                           |
+| [`references/shapes.md`](references/shapes.md) | Plantillas de curvas (círculos por diámetro).                         |
