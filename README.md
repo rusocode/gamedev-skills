@@ -1,17 +1,50 @@
+<div align="center">
+
 # ruso-skills
 
-Colección de skills personales.
+**A personal collection of skills for Claude Code and other AI agents.**
+
+![Claude Code](https://img.shields.io/badge/Claude%20Code-skills-D97757?logo=claude&logoColor=white)
+![Last commit](https://img.shields.io/github/last-commit/rusocode/ruso-skills?color=2E7D32)
+
+🌐 **English** | [Español](README.es.md)
+
+</div>
+
+---
+
+## Contents
+
+- 🧩 [Skills](#skills)
+- 📦 [Installation](#installation)
+- 🛠️ [Adding a new skill](#adding-a-new-skill)
 
 ## Skills
 
-- **[drawing-pixel-art](drawing-pixel-art/)** — genera y edita sprites pixel art (32x32, etc.) para juegos 2D a partir de un mapa de
-  caracteres, con validaciones de contorno, huecos y simetría.
+| Skill                                       | Description                                                                                                                                | Requirements     |
+|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|------------------|
+| [**drawing-pixel-art**](drawing-pixel-art/) | Creates and fixes pixel art sprites (16–64 px) for 2D games from character maps, validating outline, holes, symmetry, framing, and relief. | Python 3, Pillow |
 
-## Agregar una skill nueva
+Each skill has its own README with usage, examples, and structure.
 
-1. Crear la carpeta `mi-skill-nueva/` con su `SKILL.md`.
-2. Sumar al `.gitignore`:
+## Installation
+
+Clone the repository and copy the skills you want into the directory where your agent looks for them
+(`~/.claude/skills/`, `~/.agents/skills/`, or the corresponding one):
+
+```bash
+git clone https://github.com/rusocode/ruso-skills.git
+cp -r ruso-skills/drawing-pixel-art ~/.claude/skills/
+```
+
+## Adding a new skill
+
+The [`.gitignore`](.gitignore) ignores everything by default, so the repository can live directly in
+`~/.claude/skills/` next to third-party skills without tracking them. Each skill is included explicitly:
+
+1. Create the `my-new-skill/` folder with its `SKILL.md`.
+2. Whitelist it in `.gitignore`:
+   ```gitignore
+   !/my-new-skill/
    ```
-   !/mi-skill-nueva/
-   ```
-3. Sumarla a la lista de arriba.
+3. Add it to the [Skills](#-skills) table, both here and in [`README.es.md`](README.es.md).
