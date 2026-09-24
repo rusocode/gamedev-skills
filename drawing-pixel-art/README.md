@@ -18,14 +18,14 @@
 
 ## Contenido
 
-- [Cómo funciona](#cómo-funciona)
-- [Instalación](#instalación)
-- [Qué modelo conviene](#qué-modelo-conviene)
-- [Cómo pedirle cosas](#cómo-pedirle-cosas)
-- [Qué decide la skill y qué decidís vos](#qué-decide-la-skill-y-qué-decidís-vos)
-- [Cuándo conviene explicar el motivo](#cuándo-conviene-explicar-el-motivo)
-- [Qué pasa después](#qué-pasa-después)
-- [Estructura](#estructura)
+- ⚙️ [Cómo funciona](#cómo-funciona)
+- 📦 [Instalación](#instalación)
+- 🧠 [Qué modelo conviene](#qué-modelo-conviene)
+- 💬 [Cómo pedirle cosas](#cómo-pedirle-cosas)
+- 🎛️ [Qué decide la skill y qué decidís vos](#qué-decide-la-skill-y-qué-decidís-vos)
+- 📝 [Cuándo conviene explicar el motivo](#cuándo-conviene-explicar-el-motivo)
+- ✅ [Qué pasa después](#qué-pasa-después)
+- 🗂️ [Estructura](#estructura)
 
 ## Cómo funciona
 
