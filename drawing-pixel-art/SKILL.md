@@ -54,7 +54,7 @@ hay que delegar una tanda de sprites, pasar `model: opus` al agente.
 3. **Silueta por filas, a mano.** Encuadre: el sprite ocupa al menos el 70% del lienzo en su lado mayor, con 1-2
    px de margen, centrado en el lienzo. Excepcion: lo que llena su casilla por diseño — una puerta, un tile, un
    fondo — llega al borde a proposito y lo declara con `# sangra: si`, que apaga el aviso de margen (ver
-   `door_iron.txt`). Con `# espejo: x` se escribe **solo la mitad izquierda** (o superior con
+   `iron_door.txt`). Con `# espejo: x` se escribe **solo la mitad izquierda** (o superior con
    `y`) y el script completa la otra: la mitad de trabajo y simetria garantizada. El espejo solo rellena celdas
    transparentes de la mitad derecha, asi que para sombrear distinto cada lado se escriben esas celdas a mano y
    el resto se deja en `.`. Escribir la tabla de spans
@@ -71,7 +71,7 @@ hay que delegar una tanda de sprites, pasar `model: opus` al agente.
    material — un cilindro de 7 px visibles admite 7 bandas y ninguna mas, una cara de corte de 7x7 con anillo
    admite 5. En 32x32 eso da 5-7 tonos por material. Con un solo material sirve el esqueleto `D d n m l L`
    (de oscuro a claro, ver `stone.txt` y `gold.txt`); con varios **cada rampa lleva su propia familia de letras**,
-   porque dos rampas no pueden compartir simbolo: en `door_iron.txt` la piedra es `W V U T S R`, la madera
+   porque dos rampas no pueden compartir simbolo: en `iron_door.txt` la piedra es `W V U T S R`, la madera
    `n m k j h` y el hierro `I i g`. Elegir letras que recuerden al material y mantener el orden claro→oscuro dentro
    de cada familia. Mas el brillo `w` y el contorno `O`. El total sale solo: un material ~8 simbolos, dos ~14, cuatro ~
     22. **No hay tope fijo**; el limite es que dos
@@ -139,6 +139,15 @@ y si un sprite de 24 px o mas no declara `# relieve:`), devuelve las checklists 
 el PNG y un preview `NearestNeighbor` sobre fondo verde. Leer toda esa salida: un "anillo" con `holes: 0` no es un
 anillo, y `fill tones: 4` es un sprite plano aunque la silueta sea perfecta.
 
+`scripts/bands.py` es opcional y solo sirve para objetos con **reborde perimetral** (escudos, monedas, puertas,
+placas). No dibuja: `bands(spans, w, h)` convierte una tabla de spans escrita a mano en capas concentricas
+(1 = contorno, 2..k = reborde, k+1 = ranura, resto = campo), y `bevel_index()` da el tono de cada pixel de reborde
+segun cuanto mira su normal hacia la luz. Resuelve las dos cosas que salen mal a ojo: un reborde de ancho constante
+(seguir el contorno a mano lo adelgaza en las diagonales) y un bisel que se lee como levantado en vez de como una
+banda plana. El campo, el sombreado y los detalles siguen escribiendose a mano encima — ahi esta el dibujo, y un
+reborde perfecto alrededor de una forma generica sigue siendo una capsula. Ejemplo completo en
+`examples/iron_shield.txt`.
+
 ## Biblioteca de siluetas (`examples/`)
 
 Antes de diseñar desde cero, buscar aca una silueta parecida y partir de ese mapa (cambiar paleta, proporciones
@@ -153,10 +162,11 @@ de sombreado, no solo de silueta. Una linea por forma:
 | `padlock.txt`      | arco sobre cuerpo rectangular con dos huecos; media silueta con `# espejo: x`, luz cenital en bandas y brillo en el eje, que es el unico sombreado compatible con el espejo | candados, bolsos, cofres con asa, campanas, faroles                                 |
 | `helmet.txt`       | cupula (medio circulo D=24) + placa recta + 2 ranuras con puente + 2 orificios, 4 huecos; ancho completo escrito a mano con luz diagonal y `# simetria: x`                  | cascos, cubos, campanas invertidas, mascaras                                        |
 | `stone.txt`        | roca poligonal (meseta, 45 grados, flancos verticales, base plana) con 3 caras, rampa completa, especular, dither, grietas y hoyuelo; `--auto-outline`                      | rocas, minerales, carbon, lingotes toscos, bloques de tierra o hielo                |
-| `door_iron.txt`    | arco de medio punto de dovelas con juntas de mortero sobre jambas rectas, doble hoja de madera y dos herrajes: tres materiales, tres rampas (6+5+3)                         | puertas, portones, ventanas con arco, arcadas, muros de piedra, cofres con herrajes |
+| `iron_door.txt`    | arco de medio punto de dovelas con juntas de mortero sobre jambas rectas, doble hoja de madera y dos herrajes: tres materiales, tres rampas (6+5+3)                         | puertas, portones, ventanas con arco, arcadas, muros de piedra, cofres con herrajes |
 | `gold.txt`         | seis monedas de frente (circulos D=12/10/8) solapadas con contorno de 1 px a mano entre ellas; canto claro/oscuro, especular, cara hundida, emblema 2x2                     | pilas de monedas, botones, fichas, escudos redondos, engranajes                     |
 | `chicken.txt`      | cuerpo redondeado de costado + muslo ovalado delante con anillo de contorno a mano + dos huesos de 2 px de relleno con punta de dos nudos; piel en rampa D d n m l L, hueso B b c | comida asada (pollo, pierna, jamon), carnes, animales de costado, piezas con hueso |
 | `wood_door.txt`    | marco recto de viga (dintel sobre dos postes) + hoja de tablas con juntas D, dos travesaños, tornapunta en Z con pendiente 2:1, bisagras de fleje y aldaba de anillo; tres rampas (hoja 7, marco 7, hierro 4) | puertas y portones de madera, cajas, barriles de frente, empalizadas, carteles de tablas |
+| `iron_shield.txt`  | heater (dos arcos de circulo convergiendo en punta) con reborde perimetral de 3 px separado del campo por una ranura, nervadura vertical central con ranuras a los lados, 8 remaches en hoyuelo; rampa unica de metal (7 tonos) | escudos, blasones, placas de metal, cualquier heater liso o con relieve central |
 
 **Variantes de color.** Cuando dos sprites comparten la grilla y solo cambian tonos (pocion roja / azul / verde),
 no se duplica el mapa: el mapa base declara `# variante nombre: sym=R,G,B[,A]; sym=...` por cada colorway y se
