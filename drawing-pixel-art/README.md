@@ -2,24 +2,19 @@
 
 # Drawing Pixel Art
 
-**Skill para agentes que dibuja y retoca sprites en pixel art, píxel por píxel, con validación automática.**
+**Skill especialista en dibujar y arreglar sprites en Pixel Art.**
 
 ![Python 3](https://img.shields.io/badge/python-3.x-3776AB?logo=python&logoColor=white)
 ![Pillow](https://img.shields.io/badge/deps-Pillow-8CAAE6)
 ![Sprites](https://img.shields.io/badge/sprites-16%E2%80%9364%20px-2E7D32)
 
-<img src="example.png" alt="Escudo de madera antes y después del redibujo" width="560">
+<img src="example.png" width="560">
 
-<sub>Encargo real: <i>"arreglá el item wood_shield.png"</i>. El original (<code>before</code>) era pixel art pintado o
-reducido, y el <code>audit</code> lo marcó <b>REDRAW</b>. Se conservó la silueta como plano y se redibujó píxel a píxel
-(<code>after</code>). Mapa en <a href="examples/wood_shield.txt"><code>examples/wood_shield.txt</code></a>.</sub>
+<sub>Ejemplo real utilizando el prompt **<i>"Arreglá el item wood_shield.png"</i>**.</sub>
 
 </div>
 
 ---
-
-Esta guía es para el **usuario**: qué pedir para que la skill haga lo que querés. El **cómo** se dibuja está en
-[`SKILL.md`](SKILL.md), que es lo que lee el agente.
 
 ## Contenido
 
@@ -71,13 +66,13 @@ tener el reborde en 3 tonos, ninguna textura y un degradado que no sigue el volu
 
 Medido sobre el mismo encargo (arreglar un `wood_shield.png` de 32x32, conservando la silueta en ambos casos):
 
-|                              | Sonnet    | Opus                       |
+|                              |  Sonnet   |            Opus            |
 |------------------------------|:---------:|:--------------------------:|
-| Veredicto del audit          | pasa      | pasa                       |
-| Silueta                      | D=28, 88% | D=28, 88% (idéntica)       |
-| Tonos de relleno / dominante | 11 / 26%  | 14 / 15%                   |
-| Reborde perimetral           | 3 tonos   | 7 tonos (bisel por normal) |
-| Remaches / vetas             | 0 / 0     | 8 / 8                      |
+| Veredicto del audit          |   pasa    |            pasa            |
+| Silueta                      | D=28, 88% |    D=28, 88% (idéntica)    |
+| Tonos de relleno / dominante | 11 / 26%  |          14 / 15%          |
+| Reborde perimetral           |  3 tonos  | 7 tonos (bisel por normal) |
+| Remaches / vetas             |   0 / 0   |           8 / 8            |
 
 Los dos entregan un escudo redondo reconocible y los dos pasan todas las validaciones. La diferencia está entera en
 el paso 7 (relieve y textura), que es justo lo que ningún script puede medir por vos.
@@ -87,13 +82,13 @@ el paso 7 (relieve y textura), que es justo lo que ningún script puede medir po
 
 ## Cómo pedirle cosas
 
-| Qué querés                                                     | Prompt                                   |
-|----------------------------------------------------------------|------------------------------------------|
-| Un sprite nuevo                                                | `Creá el sprite de una antorcha, 32x32`  |
-| Arreglar uno existente                                         | `Arreglá el sprite ruta/X.png`           |
-| Un cambio concreto en uno existente                            | `Sacale la piedrita a ruta/stone.png`    |
-| Otro color del mismo sprite                                    | `Agregá una variante verde a la poción`  |
-| Devolverle la fuente al mapa después de editar el PNG a mano   | `Edité a mano X.png, actualizá su mapa`  |
+| Qué querés                                                   | Prompt                                  |
+|--------------------------------------------------------------|-----------------------------------------|
+| Un sprite nuevo                                              | `Creá el sprite de una antorcha, 32x32` |
+| Arreglar uno existente                                       | `Arreglá el sprite ruta/X.png`          |
+| Un cambio concreto en uno existente                          | `Sacale la piedrita a ruta/stone.png`   |
+| Otro color del mismo sprite                                  | `Agregá una variante verde a la poción` |
+| Devolverle la fuente al mapa después de editar el PNG a mano | `Edité a mano X.png, actualizá su mapa` |
 
 Detalles que vale la pena tener en cuenta:
 
@@ -107,10 +102,10 @@ Detalles que vale la pena tener en cuenta:
 Antes de tocar un sprite existente, la skill corre `pixelmap.py audit --png X.png`, que **mide** el archivo y
 dicta la técnica:
 
-| Veredicto   | Diagnóstico                                          | Qué se hace                                                                                  |
-|-------------|------------------------------------------------------|----------------------------------------------------------------------------------------------|
-| **RETOUCH** | Es pixel art autorado.                               | Se reabre el PNG como mapa y se corrige ahí. Todo lo que no se toca queda idéntico píxel a píxel. |
-| **REDRAW**  | Está pintado con pincel suave o reducido de una imagen grande. | Los píxeles hay que recolocarlos a mano.                                           |
+| Veredicto   | Diagnóstico                                                    | Qué se hace                                                                                       |
+|-------------|----------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| **RETOUCH** | Es pixel art autorado.                                         | Se reabre el PNG como mapa y se corrige ahí. Todo lo que no se toca queda idéntico píxel a píxel. |
+| **REDRAW**  | Está pintado con pincel suave o reducido de una imagen grande. | Los píxeles hay que recolocarlos a mano.                                                          |
 
 Eso es lo único que la medición resuelve. Cuando da REDRAW queda **una** pregunta, y es tuya:
 
@@ -146,10 +141,10 @@ chico. Sí hace falta cuando el problema es el **dibujo**, porque eso no lo mide
 
 ## Estructura
 
-| Ruta                                           | Qué es                                                                |
-|------------------------------------------------|-----------------------------------------------------------------------|
-| [`SKILL.md`](SKILL.md)                         | Instrucciones para el agente: el proceso de dibujo paso a paso.       |
-| [`scripts/pixelmap.py`](scripts/pixelmap.py)   | CLI con `render` (mapa → PNG), `from-png` (PNG → mapa) y `audit`.     |
-| [`scripts/bands.py`](scripts/bands.py)         | Ayudas para rebordes de ancho constante y bisel según la luz.         |
-| [`examples/`](examples/)                       | Mapas aprobados: la biblioteca de siluetas.                           |
-| [`references/shapes.md`](references/shapes.md) | Plantillas de curvas (círculos por diámetro).                         |
+| Ruta                                           | Qué es                                                            |
+|------------------------------------------------|-------------------------------------------------------------------|
+| [`SKILL.md`](SKILL.md)                         | Instrucciones para el agente: el proceso de dibujo paso a paso.   |
+| [`scripts/pixelmap.py`](scripts/pixelmap.py)   | CLI con `render` (mapa → PNG), `from-png` (PNG → mapa) y `audit`. |
+| [`scripts/bands.py`](scripts/bands.py)         | Ayudas para rebordes de ancho constante y bisel según la luz.     |
+| [`examples/`](examples/)                       | Mapas aprobados: la biblioteca de siluetas.                       |
+| [`references/shapes.md`](references/shapes.md) | Plantillas de curvas (círculos por diámetro).                     |
