@@ -27,7 +27,7 @@
 - ✅ [Qué pasa después](#qué-pasa-después)
 - 🗂️ [Estructura](#estructura)
 
-## Cómo funciona
+## ⚙️ Cómo funciona
 
 Los sprites se escriben como **mapas de caracteres** (un carácter = un píxel = un color de la paleta) y se compilan
 a PNG con [`scripts/pixelmap.py`](scripts/pixelmap.py):
@@ -41,7 +41,7 @@ mapa .txt  ──►  pixelmap.py render  ──►  PNG + preview 8x
 Las siluetas ya aprobadas viven en [`examples/`](examples/) y las plantillas de curvas (círculos por diámetro) en
 [`references/shapes.md`](references/shapes.md).
 
-## Instalación
+## 📦 Instalación
 
 Copiá la carpeta `drawing-pixel-art/` donde tu agente busque skills (`~/.claude/skills/`, `~/.agents/skills/` o
 el directorio que corresponda):
@@ -57,7 +57,7 @@ cp -r ruso-skills/drawing-pixel-art ~/.claude/skills/
 pip install pillow
 ```
 
-## Qué modelo conviene
+## 🧠 Qué modelo conviene
 
 El dibujo lo tiene que hacer el modelo más fuerte que tengas a mano, con el razonamiento extendido activo; en la
 práctica, **Opus**. No es una preferencia: `pixelmap.py` valida contorno, huecos, simetría, encuadre y que el
@@ -80,7 +80,7 @@ el paso 7 (relieve y textura), que es justo lo que ningún script puede medir po
 > [!TIP]
 > Si el sprite sale correcto pero soso, revisá con qué modelo lo pediste antes de tocar el mapa.
 
-## Cómo pedirle cosas
+## 💬 Cómo pedirle cosas
 
 | Qué querés                                                   | Prompt                                  |
 |--------------------------------------------------------------|-----------------------------------------|
@@ -97,7 +97,7 @@ Detalles que vale la pena tener en cuenta:
   un sprite pintado de 200 colores es imposible y la instrucción se contradice sola.
 - **El tamaño no hace falta** si el sprite ya existe: sale del archivo.
 
-## Qué decide la skill y qué decidís vos
+## 🎛️ Qué decide la skill y qué decidís vos
 
 Antes de tocar un sprite existente, la skill corre `pixelmap.py audit --png X.png`, que **mide** el archivo y
 dicta la técnica:
@@ -117,7 +117,7 @@ Eso es lo único que la medición resuelve. Cuando da REDRAW queda **una** pregu
 Si no lo aclarás, la skill pregunta antes de dibujar la primera fila. Lo podés adelantar con media línea:
 `…, conservando la silueta` o `…, la silueta podés cambiarla si no se lee`.
 
-## Cuándo conviene explicar el motivo
+## 📝 Cuándo conviene explicar el motivo
 
 No hace falta justificar lo que la auditoría ya mide: colores de más, falta de contorno, sprite plano, encuadre
 chico. Sí hace falta cuando el problema es el **dibujo**, porque eso no lo mide nadie:
@@ -127,7 +127,7 @@ chico. Sí hace falta cuando el problema es el **dibujo**, porque eso no lo mide
 - *"la pose es rara"*
 - *"las monedas parecen galletitas"*
 
-## Qué pasa después
+## ✅ Qué pasa después
 
 1. Todo el trabajo sale en una carpeta de borradores fuera de los assets reales (`sandbox/` del proyecto si existe;
    si no, el scratchpad del entorno).
@@ -139,7 +139,7 @@ chico. Sí hace falta cuando el problema es el **dibujo**, porque eso no lo mide
 > Corregir el PNG vos mismo en un editor es parte del flujo, no una excepción: se reimporta con `from-png` y el mapa
 > vuelve a ser la fuente.
 
-## Estructura
+## 🗂️ Estructura
 
 | Ruta                                           | Qué es                                                            |
 |------------------------------------------------|-------------------------------------------------------------------|
