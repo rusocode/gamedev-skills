@@ -8,10 +8,37 @@ con [`scripts/pixelmap.py`](scripts/pixelmap.py), que ademas valida contorno, hu
 Las siluetas ya resueltas viven en [`examples/`](examples/) y las plantillas de curvas (circulos por diametro) en
 [`references/shapes.md`](references/shapes.md).
 
+![](example.png)
+
+*Encargo real: "arregla el item wood_shield.png". El original (`before`) era pixel art pintado/reducido — el
+`audit` de `pixelmap.py` lo marco REDRAW. Se conservo la silueta como plano y se redibujo pixel a pixel (`after`): mapa
+en [`examples/wood_shield.txt`](examples/wood_shield.txt).*
+
 ## Instalacion
 
 Cloná esta carpeta donde tu agente busque skills (`~/.claude/skills/`, `~/.agents/skills/`, o el directorio que
 corresponda). Necesitas Python 3 con Pillow (`pip install pillow`).
+
+## Que modelo conviene
+
+El dibujo lo hace el modelo mas fuerte que tengas a mano, con el razonamiento extendido activo: en la
+practica, **Opus**. La razon no es preferencia — `pixelmap.py` valida contorno, huecos, simetria, encuadre
+y que el sprite no sea plano, pero **no valida que el dibujo sea bueno**. Un sprite puede pasar el audit
+entero y tener igual el reborde en 3 tonos, ninguna textura y un degradado que no sigue el volumen.
+
+Medido sobre el mismo encargo (arreglar un `wood_shield.png` de 32x32, ambos conservando la silueta):
+
+|                              | Sonnet    | Opus                       |
+|------------------------------|-----------|----------------------------|
+| Veredicto del audit          | pasa      | pasa                       |
+| Silueta                      | D=28, 88% | D=28, 88% (identica)       |
+| Tonos de relleno / dominante | 11 / 26%  | 14 / 15%                   |
+| Reborde perimetral           | 3 tonos   | 7 tonos (bisel por normal) |
+| Remaches / vetas             | 0 / 0     | 8 / 8                      |
+
+Los dos entregan un escudo redondo reconocible y los dos pasan todas las validaciones. La diferencia esta
+entera en el paso 7 (relieve y textura), que es justo lo que ningun script puede medir por vos. Si el
+sprite te sale correcto pero soso, revisa con que modelo lo pediste antes de tocar el mapa.
 
 ## Ejemplos tipicos de uso
 
