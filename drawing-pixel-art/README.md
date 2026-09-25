@@ -14,7 +14,7 @@
 
 </div>
 
-A skill for drawing and fixing pixel art sprites for 2D games. The agent writes each sprite as a character map,
+A skill for drawing and fixing pixel art sprites. The agent writes each sprite as a character map,
 compiles it to PNG, and validates outline, holes, symmetry, framing, and relief before delivering it.
 
 <p align="center"><img src="example.png" width="560"></p>

@@ -14,7 +14,7 @@
 
 </div>
 
-Skill para dibujar y arreglar sprites en pixel art para juegos 2D. El agente escribe cada sprite como un mapa de
+Skill para dibujar y arreglar sprites en pixel art. El agente escribe cada sprite como un mapa de
 caracteres, lo compila a PNG y valida contorno, huecos, simetría, encuadre y relieve antes de entregarlo.
 
 <p align="center"><img src="example.png" width="560"></p>
