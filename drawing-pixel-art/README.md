@@ -64,7 +64,7 @@ step 7 (relief and texture), which is exactly what no script can measure for you
 
 | What you want                                            | Prompt                                       |
 |----------------------------------------------------------|----------------------------------------------|
-| A new sprite                                             | `Create a torch sprite, 32x32`               |
+| A new sprite                                             | `Create a 32x32 torch sprite`                |
 | Fix an existing one                                      | `Fix the sprite at path/X.png`               |
 | A specific change to an existing one                     | `Remove the little rock from path/stone.png` |
 | A different color of the same sprite                     | `Add a green variant of the potion`          |
