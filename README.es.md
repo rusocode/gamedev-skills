@@ -13,12 +13,6 @@
 
 ---
 
-## Contenido
-
-- 🧩 [Skills](#skills)
-- 📦 [Instalación](#instalación)
-- 🛠️ [Agregar una skill nueva](#agregar-una-skill-nueva)
-
 ## Skills
 
 | Skill                                       | Descripción                                                                                                                                           | Requisitos       |

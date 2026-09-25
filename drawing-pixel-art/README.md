@@ -18,17 +18,6 @@
 
 ---
 
-## Contents
-
-- ⚙️ [How it works](#how-it-works)
-- 📦 [Installation](#installation)
-- 🧠 [Which model to use](#which-model-to-use)
-- 💬 [How to ask for things](#how-to-ask-for-things)
-- 🎛️ [What the skill decides and what you decide](#what-the-skill-decides-and-what-you-decide)
-- 📝 [When it's worth explaining the reason](#when-its-worth-explaining-the-reason)
-- ✅ [What happens next](#what-happens-next)
-- 🗂️ [Structure](#structure)
-
 ## How it works
 
 Sprites are written as **character maps** (one character = one pixel = one palette color) and compiled
