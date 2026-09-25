@@ -1,17 +1,24 @@
-<div align="center">
+<p align="right"><a href="README.md">🇺🇸</a></p>
+
+<div align="left">
 
 # ruso-skills
 
-**Colección personal de skills para Claude Code y otros agentes de IA.**
+</div>
 
-![Claude Code](https://img.shields.io/badge/Claude%20Code-skills-D97757?logo=claude&logoColor=white)
+<div align="center">
+
+![Agentes de IA](https://img.shields.io/badge/AI%20agents-skills-D97757)
 ![Último commit](https://img.shields.io/github/last-commit/rusocode/ruso-skills?color=2E7D32)
-
-🌐 [English](README.md) | **Español**
 
 </div>
 
 ---
+
+Colección de skills para agentes de IA. Cada skill es un paquete autocontenido de instrucciones, scripts y referencias
+que le da a un agente un flujo de trabajo especializado y repetible para una tarea concreta. Las skills funcionan con
+cualquier agente compatible con el formato de skills y están diseñadas para producir resultados consistentes y
+verificables.
 
 ## Skills
 
