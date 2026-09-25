@@ -18,6 +18,8 @@ que le da a un agente un flujo de trabajo especializado y repetible para una tar
 cualquier agente compatible con el formato de skills y están diseñadas para producir resultados consistentes y
 verificables.
 
+<br>
+
 ## Skills
 
 Cada skill vive en su propia carpeta, con un `SKILL.md` que le indica al agente cuándo usarla y cómo. El agente la

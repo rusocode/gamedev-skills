@@ -17,6 +17,7 @@ A collection of skills for AI agents. Each skill is a self-contained package of 
 that gives an agent a specialized, repeatable workflow for a specific task. Skills work with any agent that supports
 the skills format and are designed to produce consistent, verifiable results.
 
+<br>
 
 ## Skills
 
