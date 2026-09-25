@@ -1,5 +1,3 @@
-<p align="right"><a href="README.es.md">🇪🇸</a></p>
-
 # Drawing Pixel Art
 
 A skill for drawing and fixing pixel art sprites. The agent writes each sprite as a character map,
