@@ -1,22 +1,25 @@
-<div align="center">
+<p align="right"><a href="README.md">🇺🇸</a></p>
+
+<div align="left">
 
 # Drawing Pixel Art
 
-**Skill especialista en dibujar y arreglar sprites en Pixel Art.**
+</div>
+
+<div align="center">
 
 ![Python 3](https://img.shields.io/badge/python-3.x-3776AB?logo=python&logoColor=white)
 ![Pillow](https://img.shields.io/badge/deps-Pillow-8CAAE6)
 ![Sprites](https://img.shields.io/badge/sprites-16%E2%80%9364%20px-2E7D32)
 
-<img src="example.png" width="560">
-
-<sub>Ejemplo real utilizando el prompt **<i>"Arreglá el item wood_shield.png"</i>**.</sub>
-
-🌐 [English](README.md) | **Español**
-
 </div>
 
----
+Skill para dibujar y arreglar sprites en pixel art para juegos 2D. El agente escribe cada sprite como un mapa de
+caracteres, lo compila a PNG y valida contorno, huecos, simetría, encuadre y relieve antes de entregarlo.
+
+<p align="center"><img src="example.png" width="560"></p>
+
+<br>
 
 ## Cómo funciona
 
