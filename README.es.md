@@ -13,12 +13,12 @@
 
 </div>
 
----
-
 Colección de skills para agentes de IA. Cada skill es un paquete autocontenido de instrucciones, scripts y referencias
 que le da a un agente un flujo de trabajo especializado y repetible para una tarea concreta. Las skills funcionan con
 cualquier agente compatible con el formato de skills y están diseñadas para producir resultados consistentes y
 verificables.
+
+---
 
 ## Skills
 

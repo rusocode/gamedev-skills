@@ -1,3 +1,5 @@
+<p align="right"><a href="README.es.md">🇪🇸</a></p>
+
 <div align="left">
 
 # ruso-skills
@@ -11,12 +13,11 @@
 
 </div>
 
----
-<p align="left"><a href="README.es.md">🇪🇸</a></p>
-
 A collection of skills for AI agents. Each skill is a self-contained package of instructions, scripts, and references
 that gives an agent a specialized, repeatable workflow for a specific task. Skills work with any agent that supports
 the skills format and are designed to produce consistent, verifiable results.
+
+---
 
 ## Skills
 
