@@ -22,6 +22,9 @@ verificables.
 
 ## Skills
 
+Cada skill vive en su propia carpeta, con un `SKILL.md` que le indica al agente cuándo usarla y cómo. El agente la
+carga automáticamente cuando un pedido coincide con su descripción.
+
 | Skill                                       | Descripción                                                                                                                                           | Requisitos       |
 |---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|
 | [**drawing-pixel-art**](drawing-pixel-art/) | Crea y corrige sprites pixel art (16–64 px) para juegos 2D a partir de mapas de caracteres, validando contorno, huecos, simetría, encuadre y relieve. | Python 3, Pillow |

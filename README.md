@@ -21,6 +21,9 @@ the skills format and are designed to produce consistent, verifiable results.
 
 ## Skills
 
+Each skill lives in its own folder, with a `SKILL.md` that tells the agent when to use it and how. Agents load it
+automatically when a request matches its description.
+
 | Skill                                       | Description                                                                                                                                | Requirements     |
 |---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|------------------|
 | [**drawing-pixel-art**](drawing-pixel-art/) | Creates and fixes pixel art sprites (16–64 px) for 2D games from character maps, validating outline, holes, symmetry, framing, and relief. | Python 3, Pillow |
