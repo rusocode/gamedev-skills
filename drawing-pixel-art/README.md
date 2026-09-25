@@ -7,8 +7,9 @@ the PNG, so you don't end up with flat or broken shapes.
 
 ## Requirements
 
-- Node.js, to install the skill with the [`skills`](https://github.com/vercel-labs/skills) CLI
-- Python 3, to run the skill's scripts
+- [Node.js](https://nodejs.org/en/download), to install the skill with the
+  [`skills`](https://github.com/vercel-labs/skills) CLI
+- [Python 3](https://www.python.org/downloads/), to run the skill's scripts
 
 ## Installation
 
@@ -23,8 +24,8 @@ pip install pillow
 ## How It Works
 
 1. The agent writes the sprite as a **map**: a text grid where each character is one pixel of one color.
-2. A script turns the map into a PNG and checks its outline, symmetry, framing, and shading. If a check fails, the
-   agent fixes the map before showing you anything.
+2. The [`pixelmap.py`](scripts/pixelmap.py) script turns the map into a PNG and checks its outline, symmetry, framing,
+   and shading. If a check fails, the agent fixes the map before showing you anything.
 3. You get the PNG with an **8x enlarged preview**, in a drafts folder away from your game's assets.
 4. **Nothing enters your project until you approve it.** Then the PNG goes to your textures folder, and its map joins
    the skill's library of approved sprites, so similar sprites don't start from scratch.
