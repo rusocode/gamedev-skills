@@ -1,25 +1,11 @@
 <p align="right"><a href="README.es.md">🇪🇸</a></p>
 
-<div align="left">
-
 # Drawing Pixel Art
-
-</div>
-
-<div align="center">
-
-![Python 3](https://img.shields.io/badge/python-3.x-3776AB?logo=python&logoColor=white)
-![Pillow](https://img.shields.io/badge/deps-Pillow-8CAAE6)
-![Sprites](https://img.shields.io/badge/sprites-16%E2%80%9364%20px-2E7D32)
-
-</div>
 
 A skill for drawing and fixing pixel art sprites. The agent writes each sprite as a character map,
 compiles it to PNG, and validates outline, holes, symmetry, framing, and relief before delivering it.
 
 <p align="center"><img src="example.png" width="560"></p>
-
-<br>
 
 ## How it works
 

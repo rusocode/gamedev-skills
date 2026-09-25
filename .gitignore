@@ -1,8 +1,10 @@
+# Ignore everything: the maintainer keeps this repository in ~/.claude/skills/, alongside untracked third-party skills.
 /*
 !/.gitignore
 !/README.md
-!/README.es.md
+!/LICENSE
 
+# Skills: whitelist each new skill folder here.
 !/drawing-pixel-art/
 
 # Python bytecode caches, in case any skill's scripts get run in place.
