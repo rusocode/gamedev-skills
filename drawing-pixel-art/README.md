@@ -34,21 +34,18 @@ pip install pillow
 
 ## Recommended Model
 
-Use the most capable model your agent offers, with extended reasoning on (for example, Claude Opus). The checks catch
-broken or flat sprites, but not whether the drawing is good, so a less capable model can deliver sprites that pass
+Use the most capable model your agent offers, with extended reasoning on (for example, Opus). The checks catch broken or
+flat sprites, but not whether the drawing is good, so a less capable model can deliver sprites that pass
 every check and still look bland.
 
 Tested on the same task with two Claude models, fixing a 32x32 wooden shield while keeping its shape:
 
-|                         | Sonnet | Opus |
-|-------------------------|:------:|:----:|
-| Passes every check      |  yes   | yes  |
-| Shades on the metal rim |   3    |  7   |
-| Rivets                  |   0    |  8   |
-| Wood grain lines        |   0    |  8   |
-
-> [!TIP]
-> If a sprite comes out correct but bland, check which model you used before asking for changes.
+| Result                  | Sonnet | Opus |
+|-------------------------|--------|------|
+| Passes every check      | yes    | yes  |
+| Shades on the metal rim | 3      | 7    |
+| Rivets                  | 0      | 8    |
+| Wood grain lines        | 0      | 8    |
 
 ## Usage
 
@@ -79,10 +76,10 @@ Ask to fix it, without saying "touch up" or "redraw": the skill measures the spr
 You don't need to point out extra colors, a missing outline, flat shading, or a sprite that's too small on the canvas:
 the skill detects those on its own. Do explain when the problem is the drawing itself, because no check catches that:
 
-- *"can't tell what this is"*
-- *"the silhouette is wrong, don't use it as a reference"*
-- *"the pose is off"*
-- *"the coins look like cookies"*
+- "can't tell what this is"
+- "the silhouette is wrong, don't use it as a reference"
+- "the pose is off"
+- "the coins look like cookies"
 
 ## Structure
 
