@@ -1,4 +1,4 @@
-# ruso-skills
+# gamedev-skills
 
 A collection of game development skills for AI coding agents. Skills are packaged instructions and scripts that extend
 agent capabilities.
@@ -25,7 +25,7 @@ the PNG, so you don't end up with flat or broken shapes.
 With the [`skills`](https://github.com/vercel-labs/skills) CLI (requires Node.js):
 
 ```bash
-npx skills add rusocode/ruso-skills
+npx skills add rusocode/gamedev-skills
 ```
 
 ## Usage

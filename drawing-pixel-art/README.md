@@ -15,7 +15,7 @@ the PNG, so you don't end up with flat or broken shapes.
 
 ```bash
 # Install the skill
-npx skills add rusocode/ruso-skills --skill drawing-pixel-art
+npx skills add rusocode/gamedev-skills --skill drawing-pixel-art
 
 # Install Pillow, the image library the skill's scripts use
 pip install pillow
