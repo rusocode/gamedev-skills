@@ -21,7 +21,7 @@ npx skills add rusocode/gamedev-skills --skill drawing-pixel-art
 pip install pillow
 ```
 
-## How It Works
+## How it works
 
 1. The agent writes the sprite as a **map**: a text grid where each character is one pixel of one color.
 2. The [`pixelmap.py`](scripts/pixelmap.py) script turns the map into a PNG and checks its size, outline,
@@ -32,7 +32,7 @@ pip install pillow
 4. **Nothing enters your project until you approve it.** Then the PNG goes to your textures folder, and its map joins
    the skill's library of approved sprites, so similar sprites don't start from scratch.
 
-## Recommended Model
+## Recommended model
 
 Use the most capable model your agent offers, with extended reasoning on (for example, Opus). The checks catch broken or
 flat sprites, but not whether the drawing is good, so a less capable model can deliver sprites that pass
@@ -62,7 +62,7 @@ Details worth keeping in mind:
 - **Say "sprite", "texture", "item", or "icon"** somewhere: that's what triggers the skill.
 - **The size isn't necessary** if the sprite already exists: it comes from the file.
 
-### Fixing an Existing Sprite
+### Fixing an existing sprite
 
 Ask to fix it, without saying "touch up" or "redraw": the skill measures the sprite first and picks the approach.
 
