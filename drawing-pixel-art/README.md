@@ -3,7 +3,7 @@
 Draws and fixes pixel art sprites (16–64 px) that are recognizable at a glance. Every sprite is checked before you get
 the PNG, so you don't end up with flat or broken shapes.
 
-<p align="center"><img src="example.png" width="560"></p>
+<p align="center"><img src="assets/example.png" width="560"></p>
 
 ## Requirements
 
