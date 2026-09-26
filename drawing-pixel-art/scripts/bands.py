@@ -17,7 +17,7 @@ calculan mejor:
                          de como una banda plana del mismo tono.
 
 El campo, el sombreado, los remaches y la textura se escriben a mano encima: ahi esta el dibujo.
-Ver `examples/iron_shield.txt` y su reconstruccion en el paso 9 de SKILL.md.
+Ver `assets/iron_shield.txt` y su reconstruccion en el paso 9 de SKILL.md.
 
 Uso tipico:
 

@@ -24,9 +24,11 @@ pip install pillow
 ## How It Works
 
 1. The agent writes the sprite as a **map**: a text grid where each character is one pixel of one color.
-2. The [`pixelmap.py`](scripts/pixelmap.py) script turns the map into a PNG and checks its outline, symmetry, framing,
-   and shading. If a check fails, the agent fixes the map before showing you anything.
-3. You get the PNG with an **8x enlarged preview**, in a drafts folder away from your game's assets.
+2. The [`pixelmap.py`](scripts/pixelmap.py) script turns the map into a PNG and checks its size, outline,
+   holes (like the inside of a ring), symmetry, framing, and shading. If a check fails, the agent fixes the map
+   before showing you anything.
+3. The agent reviews an **8x enlarged preview** to confirm that every key feature is visible, and you get the PNG with
+   that preview, in a drafts folder away from your game's assets.
 4. **Nothing enters your project until you approve it.** Then the PNG goes to your textures folder, and its map joins
    the skill's library of approved sprites, so similar sprites don't start from scratch.
 
@@ -90,7 +92,7 @@ drawing-pixel-art/
 ├── scripts/
 │   ├── pixelmap.py  # Turns maps into PNGs, checks them, and audits existing sprites
 │   └── bands.py     # Helper for even rims on shields, coins, and doors
-├── examples/        # Approved maps: the library new sprites start from
-└── references/
-    └── shapes.md    # Ready-made circles by diameter, for round shapes
+├── references/
+│   └── shapes.md    # Ready-made circles by diameter, for round shapes
+└── assets/          # Approved maps: the library new sprites start from
 ```

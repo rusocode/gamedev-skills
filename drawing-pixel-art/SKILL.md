@@ -50,7 +50,7 @@ Hay dos modos de falla distintos con modelos mas chicos, y el segundo es el peli
    pixel. Decenas o cientos de colores, muchos de ellos unicos, y pixeles de borde claros en vez de contorno =
    imagen pintada con pincel suave o reducida de una grande, no un sprite dibujado pixel a pixel; sirve para saber
    **que** objeto es, no **como** dibujarlo. En una carpeta a medio migrar conviven los dos estilos, asi que la
-   referencia sale de los vecinos que cumplen el paso 7 o de `examples/`, no del archivo mas cercano.
+   referencia sale de los vecinos que cumplen el paso 7 o de `assets/`, no del archivo mas cercano.
 2. **Rasgos que identifican el objeto.** Antes de dibujar, listar 2-4 formas sin las cuales nadie lo reconoce y
    escribirlas como `# rasgo: ...` al inicio del mapa. Cada rasgo nombra una geometria comprobable en el mapa —
    un hueco, una curva, una linea de 1 px, dos brazos separados, un cambio de ancho — no un adjetivo ("solido",
@@ -133,7 +133,7 @@ Hay dos modos de falla distintos con modelos mas chicos, y el segundo es el peli
    assets reales — la carpeta `sandbox/` del proyecto si existe y esta en `.gitignore`, si no el scratchpad del
    entorno — y **no pisar un asset del repo sin que lo pidan**. Cuando el usuario aprueba: el PNG va a la carpeta de
    texturas del juego y el mapa
-   `.txt` se guarda en `examples/` de esta skill con el mismo nombre base, sumando su linea a la biblioteca de
+   `.txt` se guarda en `assets/` de esta skill con el mismo nombre base, sumando su linea a la biblioteca de
    abajo — el mapa es la fuente y el PNG su compilacion, asi que un retoque futuro parte del mapa y no de cero, y
    el proximo objeto de silueta parecida parte de ese mapa. El preview no se guarda. Si el juego empaqueta atlas,
    recordar que hay que regenerarlo.
@@ -141,8 +141,8 @@ Hay dos modos de falla distintos con modelos mas chicos, y el segundo es el peli
 ## Herramienta
 
 `scripts/pixelmap.py` se invoca por su ruta absoluta con el interprete (`python <skill>/scripts/pixelmap.py ...`);
-necesita Python 3 y Pillow (`pip install pillow`). `audit` mide un PNG existente y dicta retocar o redibujar
-(ver paso 0). `render` parsea el mapa, valida ancho, alto y
+necesita Python 3 y Pillow (`pip install pillow`). `audit` mide un PNG existente y dicta retocar o redibujar (ver paso
+0). `render` parsea el mapa, valida ancho, alto y
 simbolos, pinta o valida el contorno, informa el bounding box, el % de lienzo ocupado, si toca el borde y cuantos
 huecos cerrados hay (y donde), verifica `# huecos:` y `# simetria:` (falla si no se cumplen, pero deja el preview
 para inspeccionar), cuenta los tonos del relleno y el % del dominante (falla con `PLANO:` bajo 6 tonos o sobre 40%,
@@ -151,35 +151,35 @@ el PNG y un preview `NearestNeighbor` sobre fondo verde. Leer toda esa salida: u
 anillo, y `fill tones: 4` es un sprite plano aunque la silueta sea perfecta.
 
 `scripts/bands.py` es opcional y solo sirve para objetos con **reborde perimetral** (escudos, monedas, puertas,
-placas). No dibuja: `bands(spans, w, h)` convierte una tabla de spans escrita a mano en capas concentricas
-(1 = contorno, 2..k = reborde, k+1 = ranura, resto = campo), y `bevel_index()` da el tono de cada pixel de reborde
+placas). No dibuja: `bands(spans, w, h)` convierte una tabla de spans escrita a mano en capas concentricas (1 =
+contorno, 2..k = reborde, k+1 = ranura, resto = campo), y `bevel_index()` da el tono de cada pixel de reborde
 segun cuanto mira su normal hacia la luz. Resuelve las dos cosas que salen mal a ojo: un reborde de ancho constante
 (seguir el contorno a mano lo adelgaza en las diagonales) y un bisel que se lee como levantado en vez de como una
 banda plana. El campo, el sombreado y los detalles siguen escribiendose a mano encima — ahi esta el dibujo, y un
 reborde perfecto alrededor de una forma generica sigue siendo una capsula. Ejemplo completo en
-`examples/iron_shield.txt`.
+`assets/iron_shield.txt`.
 
-## Biblioteca de siluetas (`examples/`)
+## Biblioteca de siluetas (`assets/`)
 
 Antes de diseñar desde cero, buscar aca una silueta parecida y partir de ese mapa (cambiar paleta, proporciones
 o detalles es mucho mas barato que inventar filas). Todos cumplen el paso 7, asi que tambien sirven de referencia
 de sombreado, no solo de silueta. Una linea por forma:
 
-| Mapa               | Silueta                                                                                                                                                                     | Sirve de base para                                                                  |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| `potion.txt`       | bulbo redondo + cuello + corcho; vidrio con alfa y reflejo, liquido en rampa p R q r con dither. Variantes: base roja, `azul`                                               | toda pocion (nueva = otra `# variante`); frascos, jarras, bombas                    |
-| `empty_bottle.txt` | la silueta de `potion` sin liquido: corcho + cuello + bulbo de vidrio translucido con rampa l/g/G, dither y dos reflejos                                                    | la version vacia de cualquier pocion; viales, frascos, jarrones                     |
-| `bow.txt`          | arco fino en D + linea de 1 px + hueco; la rampa se recorre a lo largo del arco, no a lo ancho (una rama de 4 px solo deja 2 px de relleno). `--auto-outline`               | arcos, hoces, lunas, asas, cuernos                                                  |
-| `padlock.txt`      | arco sobre cuerpo rectangular con dos huecos; media silueta con `# espejo: x`, luz cenital en bandas y brillo en el eje, que es el unico sombreado compatible con el espejo | candados, bolsos, cofres con asa, campanas, faroles                                 |
-| `helmet.txt`       | cupula (medio circulo D=24) + placa recta + 2 ranuras con puente + 2 orificios, 4 huecos; ancho completo escrito a mano con luz diagonal y `# simetria: x`                  | cascos, cubos, campanas invertidas, mascaras                                        |
-| `stone.txt`        | roca poligonal (meseta, 45 grados, flancos verticales, base plana) con 3 caras, rampa completa, especular, dither, grietas y hoyuelo; `--auto-outline`                      | rocas, minerales, carbon, lingotes toscos, bloques de tierra o hielo                |
-| `iron_door.txt`    | arco de medio punto de dovelas con juntas de mortero sobre jambas rectas, doble hoja de madera y dos herrajes: tres materiales, tres rampas (6+5+3)                         | puertas, portones, ventanas con arco, arcadas, muros de piedra, cofres con herrajes |
-| `gold.txt`         | seis monedas de frente (circulos D=12/10/8) solapadas con contorno de 1 px a mano entre ellas; canto claro/oscuro, especular, cara hundida, emblema 2x2                     | pilas de monedas, botones, fichas, escudos redondos, engranajes                     |
-| `chicken.txt`      | cuerpo redondeado de costado + muslo ovalado delante con anillo de contorno a mano + dos huesos de 2 px de relleno con punta de dos nudos; piel en rampa D d n m l L, hueso B b c | comida asada (pollo, pierna, jamon), carnes, animales de costado, piezas con hueso |
-| `wood_door.txt`    | marco recto de viga (dintel sobre dos postes) + hoja de tablas con juntas D, dos travesaños, tornapunta en Z con pendiente 2:1, bisagras de fleje y aldaba de anillo; tres rampas (hoja 7, marco 7, hierro 4) | puertas y portones de madera, cajas, barriles de frente, empalizadas, carteles de tablas |
-| `iron_shield.txt`  | heater (dos arcos de circulo convergiendo en punta) con reborde perimetral de 3 px separado del campo por una ranura, nervadura vertical central con ranuras a los lados, 8 remaches en hoyuelo; rampa unica de metal (7 tonos) | escudos, blasones, placas de metal, cualquier heater liso o con relieve central |
-| `wood_shield.txt`  | disco D=28 con reborde metalico perimetral de 3 px separado del campo por una ranura, cuatro tablas verticales con junta de 1 px y canto propio (cada tabla es un cilindro), umbo circular D=10 con anillo de contorno a mano, 8 remaches; dos rampas (madera 7, hierro 6) | escudos redondos, ruedas, tapas de barril, blasones circulares, cualquier disco de tablas con herraje perimetral |
-| `key.txt`          | vastago recto a 45 grados (banda diagonal c+r de 27 a 35, 9 px de ancho por fila) entre un anillo D=16 con ojo D=6 y dos dientes finos de 3 px que cuelgan perpendiculares, cada uno con rampa propia para no fundirse con la banda oscura del vastago; ojo hundido con arco de sombra arriba-izquierda y arco de luz abajo-derecha | llaves, objetos alargados en diagonal, anillos con vastago, piezas finas perpendiculares a un eje inclinado, agujeros pasantes |
+| Mapa               | Silueta                                                                                                                                                                                                                                                                                                                                                   | Sirve de base para                                                                                                                    |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `potion.txt`       | bulbo redondo + cuello + corcho; vidrio con alfa y reflejo, liquido en rampa p R q r con dither. Variantes: base roja, `azul`                                                                                                                                                                                                                             | toda pocion (nueva = otra `# variante`); frascos, jarras, bombas                                                                      |
+| `empty_bottle.txt` | la silueta de `potion` sin liquido: corcho + cuello + bulbo de vidrio translucido con rampa l/g/G, dither y dos reflejos                                                                                                                                                                                                                                  | la version vacia de cualquier pocion; viales, frascos, jarrones                                                                       |
+| `bow.txt`          | arco fino en D + linea de 1 px + hueco; la rampa se recorre a lo largo del arco, no a lo ancho (una rama de 4 px solo deja 2 px de relleno). `--auto-outline`                                                                                                                                                                                             | arcos, hoces, lunas, asas, cuernos                                                                                                    |
+| `padlock.txt`      | arco sobre cuerpo rectangular con dos huecos; media silueta con `# espejo: x`, luz cenital en bandas y brillo en el eje, que es el unico sombreado compatible con el espejo                                                                                                                                                                               | candados, bolsos, cofres con asa, campanas, faroles                                                                                   |
+| `helmet.txt`       | cupula (medio circulo D=24) + placa recta + 2 ranuras con puente + 2 orificios, 4 huecos; ancho completo escrito a mano con luz diagonal y `# simetria: x`                                                                                                                                                                                                | cascos, cubos, campanas invertidas, mascaras                                                                                          |
+| `stone.txt`        | roca poligonal (meseta, 45 grados, flancos verticales, base plana) con 3 caras, rampa completa, especular, dither, grietas y hoyuelo; `--auto-outline`                                                                                                                                                                                                    | rocas, minerales, carbon, lingotes toscos, bloques de tierra o hielo                                                                  |
+| `iron_door.txt`    | arco de medio punto de dovelas con juntas de mortero sobre jambas rectas, doble hoja de madera y dos herrajes: tres materiales, tres rampas (6+5+3)                                                                                                                                                                                                       | puertas, portones, ventanas con arco, arcadas, muros de piedra, cofres con herrajes                                                   |
+| `gold.txt`         | seis monedas de frente (circulos D=12/10/8) solapadas con contorno de 1 px a mano entre ellas; canto claro/oscuro, especular, cara hundida, emblema 2x2                                                                                                                                                                                                   | pilas de monedas, botones, fichas, escudos redondos, engranajes                                                                       |
+| `chicken.txt`      | cuerpo redondeado de costado + muslo ovalado delante con anillo de contorno a mano + dos huesos de 2 px de relleno con punta de dos nudos; piel en rampa D d n m l L, hueso B b c                                                                                                                                                                         | comida asada (pollo, pierna, jamon), carnes, animales de costado, piezas con hueso                                                    |
+| `wood_door.txt`    | marco recto de viga (dintel sobre dos postes) + hoja de tablas con juntas D, dos travesaños, tornapunta en Z con pendiente 2:1, bisagras de fleje y aldaba de anillo; tres rampas (hoja 7, marco 7, hierro 4)                                                                                                                                             | puertas y portones de madera, cajas, barriles de frente, empalizadas, carteles de tablas                                              |
+| `iron_shield.txt`  | heater (dos arcos de circulo convergiendo en punta) con reborde perimetral de 3 px separado del campo por una ranura, nervadura vertical central con ranuras a los lados, 8 remaches en hoyuelo; rampa unica de metal (7 tonos)                                                                                                                           | escudos, blasones, placas de metal, cualquier heater liso o con relieve central                                                       |
+| `wood_shield.txt`  | disco D=28 con reborde metalico perimetral de 3 px separado del campo por una ranura, cuatro tablas verticales con junta de 1 px y canto propio (cada tabla es un cilindro), umbo circular D=10 con anillo de contorno a mano, 8 remaches; dos rampas (madera 7, hierro 6)                                                                                | escudos redondos, ruedas, tapas de barril, blasones circulares, cualquier disco de tablas con herraje perimetral                      |
+| `key.txt`          | vastago recto a 45 grados (banda diagonal c+r de 27 a 35, 9 px de ancho por fila) entre un anillo D=16 con ojo D=6 y dos dientes finos de 3 px que cuelgan perpendiculares, cada uno con rampa propia para no fundirse con la banda oscura del vastago; ojo hundido con arco de sombra arriba-izquierda y arco de luz abajo-derecha                       | llaves, objetos alargados en diagonal, anillos con vastago, piezas finas perpendiculares a un eje inclinado, agujeros pasantes        |
 | `stone_sword.txt`  | espada diagonal de dos materiales sobre el eje c-r=0: hoja de piedra de 9 px de ancho por fila con punta de biseles simetricos y filo astillado (mellas y salientes de 1 px sobre c-r=+-4), guarda de madera perpendicular (banda c+r=38..42) y mango entre dos lineas de contorno rematado en un pomo de piedra D=5; dos rampas (piedra 6 + w, madera 6) | espadas, dagas, hachas, picos y cualquier herramienta en diagonal; piezas perpendiculares a un eje inclinado; filos de piedra tallada |
 
 **Variantes de color.** Cuando dos sprites comparten la grilla y solo cambian tonos (pocion roja / azul / verde),
@@ -189,8 +189,8 @@ linea `# variante` mas, no un archivo mas. Si cambia la grilla, cambia para toda
 contrato; si un colorway necesita otra forma, entonces si es otro mapa.
 
 `from-png` hace el camino inverso: reconstruye el mapa a partir de un PNG. Sirve cuando el usuario
-retoca un sprite en un editor (Aseprite, Piskel): `python scripts/pixelmap.py from-png --png x.png --palette examples/x.txt
---out examples/x.txt` (con `--variant nombre` si el PNG es una variante) reutiliza los simbolos del mapa viejo, poda los
+retoca un sprite en un editor (Aseprite, Piskel): `python scripts/pixelmap.py from-png --png x.png --palette assets/x.txt
+--out assets/x.txt` (con `--variant nombre` si el PNG es una variante) reutiliza los simbolos del mapa viejo, poda los
 que ya no se usan, absorbe redondeos de ±2 por
 canal, inventa simbolos solo para colores realmente nuevos, y se niega si hay mas de 32 (antialiasing o capas
 semitransparentes: se arregla en el editor, no en el mapa). Las lineas `# rasgo/huecos/simetria` las **copia sin
@@ -224,7 +224,7 @@ por caracter; portar tambien las validaciones, que son lo que hace util al scrip
 - "Me pidieron el sprite nombrando el archivo que reemplaza, asi que copiarlo al repo ya esta autorizado" — no.
   "Crea X que reemplace Y.png" es **el encargo**, no la aprobacion. El PNG y su mapa se entregan en la carpeta de
   borradores con el preview y ahi se para, hasta que el usuario apruebe en un mensaje posterior. Lo mismo vale para
-  sumar el mapa a `examples/`.
+  sumar el mapa a `assets/`.
 - `audit` dice **REDRAW** y me pongo a dibujar sin preguntar si la silueta se conserva — la auditoria decide la
   tecnica (si los pixeles se reaprovechan o hay que recolocarlos), **no** si el objeto puede cambiar de forma. Eso
   es del usuario: redibujar conservando la silueta usa el original como plano; rediseñar lo descarta. Preguntar

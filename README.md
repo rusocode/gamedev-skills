@@ -49,6 +49,7 @@ Each skill contains:
 - `SKILL.md` - Instructions for the agent
 - `scripts/` - Helper scripts for automation (optional)
 - `references/` - Supporting documentation (optional)
+- `assets/` - Templates and static resources (optional)
 
 ## License
 
