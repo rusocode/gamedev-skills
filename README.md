@@ -22,7 +22,7 @@ the PNG, so you don't end up with flat or broken shapes.
 
 ## Installation
 
-With the [`skills`](https://github.com/vercel-labs/skills) CLI (requires Node.js):
+With the [`skills`](https://github.com/vercel-labs/skills) CLI (requires [Node.js](https://nodejs.org/en/download)):
 
 ```bash
 npx skills add rusocode/gamedev-skills
