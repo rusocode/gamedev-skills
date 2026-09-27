@@ -90,6 +90,7 @@ drawing-pixel-art/
 │   ├── pixelmap.py  # Turns maps into PNGs, checks them, and audits existing sprites
 │   └── bands.py     # Helper for even rims on shields, coins, and doors
 ├── references/
-│   └── shapes.md    # Ready-made circles by diameter, for round shapes
+│   ├── shapes.md    # Ready-made circles by diameter, for round shapes
+│   └── ramps.md     # Shared hue-shifted stone and iron ramps
 └── assets/          # Approved maps: the library new sprites start from
 ```

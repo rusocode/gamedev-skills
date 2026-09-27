@@ -86,15 +86,25 @@ Hay dos modos de falla distintos con modelos mas chicos, y el segundo es el peli
    (de oscuro a claro, ver `stone.txt` y `gold.txt`); con varios **cada rampa lleva su propia familia de letras**,
    porque dos rampas no pueden compartir simbolo: en `iron_door.txt` la piedra es `W V U T S R`, la madera
    `n m k j h` y el hierro `I i g`. Elegir letras que recuerden al material y mantener el orden claro→oscuro dentro
-   de cada familia. Mas el brillo `w` y el contorno `O`. El total sale solo: un material ~8 simbolos, dos ~14, cuatro ~
-    22. **No hay tope fijo**; el limite es que dos
-        tonos de la misma rampa se distingan a simple vista (si no se distinguen no son un escalon, son ruido) y un
-        techo blando de ~32 simbolos. Medido en un atado de leña de 32x32 con cuatro materiales, renderizando el mismo
-        dibujo con tres paletas: de 13 a 18 simbolos se nota, de 18 a 22 tambien (una banda por fila en vez de dither),
-        y de 22 en adelante las piezas se quedan sin filas donde ponerlos. El estilo es **limpio**:
-        tonos planos elegidos a mano, sin antialiasing ni ruido; el relieve sale de donde se pone cada tono (paso 7), no
-        de
-        la cantidad. Alfa opcional para vidrio o agua.
+   de cada familia. Mas el brillo `w` y el contorno `O`. El total sale solo: un material ~8 simbolos, dos ~14,
+   cuatro ~22. **No hay tope fijo**; el limite es que dos tonos de la misma rampa se distingan a simple vista (si no
+   se distinguen no son un escalon, son ruido) y un techo blando de ~32 simbolos. Medido en un atado de leña de
+   32x32 con cuatro materiales, renderizando el mismo dibujo con tres paletas: de 13 a 18 simbolos se nota, de 18 a
+   22 tambien (una banda por fila en vez de dither), y de 22 en adelante las piezas se quedan sin filas donde
+   ponerlos. El estilo es **limpio**: tonos planos elegidos a mano, sin antialiasing ni ruido; el relieve sale de
+   donde se pone cada tono (paso 7), no de la cantidad. Alfa opcional para vidrio o agua.
+
+   **El matiz corre con la luz (hue shifting).** Una rampa no solo baja de brillo: las sombras se corren hacia frio
+   (azul, violeta) y las luces hacia calido (crema, amarillo), con el tono medio casi neutro. Cada escalon conserva
+   la luminancia (`0.299 R + 0.587 G + 0.114 B`) que tendria sin corrimiento, asi el sombreado queda igual y solo
+   cambia el matiz. Una rampa gris que solo oscurece se ve apagada, "gris de pantalla"; con el corrimiento las caras
+   iluminada y en sombra se separan mas. Medido sobre `stone.txt` con la misma grilla: el corrimiento suave (sombras
+   ~240 grados al 25-35% de saturacion, luces ~50 grados al 7-10%) le dio volumen; uno marcado (sombras al 45%)
+   convirtio la roca en un mineral azul. El limite es ese: se nota en el preview, pero no cambia de que material
+   parece el objeto. Los materiales calidos ya lo traen si la rampa esta bien elegida (`gold.txt`, `chicken.txt`:
+   de naranja rojizo en la sombra a amarillo en la luz). **Piedra y hierro no se inventan**: se copian las rampas
+   de `references/ramps.md`, que comparten todos los mapas de la biblioteca, para que dos objetos del mismo
+   material no salgan con dos grises distintos.
 5. **Escribir el mapa.** Archivo de texto: paleta, linea en blanco, filas (formato en la cabecera de
    `scripts/pixelmap.py`). El
    mapa tiene **exactamente** las dimensiones del lienzo pedido (32x32 = 32 filas de 32 caracteres), rellenando con
@@ -211,6 +221,7 @@ por caracter; portar tambien las validaciones, que son lo que hace util al scrip
 | Contorno en damero, forma "de alambre"                | Se dibujo con primitivas de linea                        | Rehacer como mapa de caracteres, silueta primero                                  |
 | No se distingue que es                                | Piezas de 1-2 px, sin relleno ni tonos                   | Grosor >= 3 px por pieza, rampa de 5-7 tonos por material                         |
 | Se ve plano, "de plastico", aunque la forma este bien | Caras de un solo tono, brillo en raya, sin textura       | Paso 7 completo: rampa entera, especular en mancha, borde oscuro, dither, textura |
+| Se ve apagado, "gris de pantalla"                     | Rampa que solo baja de brillo, con el mismo matiz        | Correr el matiz (paso 4); piedra y hierro de `references/ramps.md`                |
 | `PLANO:` en el render                                 | Menos de 6 tonos o uno cubre mas del 40% del relleno     | Agregar escalones de rampa y textura en el mapa; no achicar ni declarar menos     |
 | Un rasgo desaparecio (cuerda, mango)                  | Solapa con otra pieza del mismo color, o nunca se dibujo | Separar 1 px o cambiar a color de contorno; ubicar cada `# rasgo` en el mapa      |
 | Media luna gorda en vez de arco                       | Rama de 10 px sin cuerda                                 | Rama de 3-4 px, cuerda de 1 px recta, hueco transparente entre ambas              |
