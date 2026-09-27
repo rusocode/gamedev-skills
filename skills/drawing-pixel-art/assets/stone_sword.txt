@@ -9,14 +9,14 @@
 # relieve: textura: tres lascas que rompen las bandas (c-r=2 filas 9-12, c-r=-1 filas 15-17, c-r=1 filas 15-17), grieta O de (14,11) a (12,13), grieta D de (20,16) a (18,18), remaches R+W en los brazos de la guarda (23,16)(24,17) y (16,23)(17,24), veta R en la guarda (20,19)(19,22) y S en el mango (23,23)(24,24)
 # huecos: 0
 . = transparent
-O = 40,38,46
-D = 58,58,68
-d = 86,88,98
-n = 108,111,120
-m = 130,133,142
-l = 174,178,186
-L = 196,200,207
-w = 224,228,234
+O = 38,32,50
+D = 52,52,78
+d = 82,86,110
+n = 104,110,124
+m = 132,134,138
+l = 178,176,166
+L = 204,200,184
+w = 236,232,212
 R = 54,34,20
 S = 78,50,28
 T = 104,68,38

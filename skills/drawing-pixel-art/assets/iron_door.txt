@@ -11,21 +11,21 @@
 # relieve: cada herraje lleva su propia rampa de hierro: canto superior claro I, cuerpo i y sombra g abajo
 # relieve: textura: juntas de mortero R de 1 px, separacion de tablas h cada 4 columnas, junta central g
 . = transparent
-O = 26,26,24
-W = 200,200,190
-V = 176,176,167
-U = 152,152,144
-T = 126,127,120
-S = 100,101,96
-R = 74,75,72
+O = 28,24,36
+W = 203,199,184
+V = 177,176,166
+U = 151,151,150
+T = 123,126,133
+S = 94,100,118
+R = 70,72,97
 n = 134,128,106
 m = 114,108,88
 k = 95,90,73
 j = 77,73,59
 h = 60,57,46
-I = 150,151,146
-i = 84,85,86
-g = 42,43,44
+I = 147,150,157
+i = 78,84,108
+g = 41,40,64
 
 ............OOOOOOO.............
 ..........OOOVVVVVOOO...........
