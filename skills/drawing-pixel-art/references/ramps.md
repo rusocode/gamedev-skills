@@ -52,5 +52,5 @@ factor `k` entre 0 y 1: cada canal pasa a `Y + k * (c - Y)`, donde `Y` es la lum
 cambia. En la biblioteca: la hoja de `wood_door.txt` usa `k = 1` y el marco `k = 0.8`; las hojas de
 `iron_door.txt` son madera gastada, con `k = 0.35`.
 
-Fuente: `wood_shield.txt`, `stone_sword.txt`, `wood_door.txt`, `iron_door.txt` y `bow.txt`, que ya la usan. Los
-contornos de las piezas de madera no se tocaron: cada mapa conserva el suyo.
+Fuente: `wood_shield.txt`, `stone_sword.txt`, `wood_door.txt`, `iron_door.txt`, `bow.txt` y `wood.txt`, que ya la
+usan. Los contornos de las piezas de madera no se tocaron: cada mapa conserva el suyo.
