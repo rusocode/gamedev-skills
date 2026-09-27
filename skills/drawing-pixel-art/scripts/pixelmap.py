@@ -227,7 +227,7 @@ def render(args):
             if m["bleed"]:
                 out.append("bleed: sprite fills its cell to the edge, as declared")
             else:
-                out.append("WARNING: sprite touches the canvas edge; leave 1-2 px of margin "
+                out.append("WARNING: sprite touches the canvas edge; leave at least 1 px of margin "
                            "(a door, tile or backdrop that fills its cell declares '# sangra: si')")
 
         # Relief: a sprite whose fill is a few flat blocks passes every silhouette check and still looks flat.

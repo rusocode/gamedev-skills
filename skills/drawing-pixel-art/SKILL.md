@@ -62,9 +62,11 @@ Hay dos modos de falla distintos con modelos mas chicos, y el segundo es el peli
    corrigen las filas, no se borra la declaracion. El script devuelve los rasgos como checklist y el reporte final
    dice en que filas/columnas quedo cada uno. Una capsula, una media luna, un trapecio o un rectangulo con tonos no
    es un sprite.
-3. **Silueta por filas, a mano.** Encuadre: el sprite ocupa al menos el 70% del lienzo en su lado mayor, con 1-2
-   px de margen, centrado en el lienzo. Excepcion: lo que llena su casilla por diseño — una puerta, un tile, un
-   fondo — llega al borde a proposito y lo declara con `# sangra: si`, que apaga el aviso de margen (ver
+3. **Silueta por filas, a mano.** Encuadre: el sprite ocupa al menos el 70% del lienzo en su lado mayor, con al
+   menos 1 px de margen en ese lado, centrado en el lienzo. El margen maximo lo pone el 70% (en 32x32, hasta 4 px
+   por lado): dentro de ese rango se elige el que mejor quede. El lado corto sigue las proporciones del objeto, asi
+   que su hueco no es margen de sobra (una pocion es angosta). Excepcion: lo que llena su casilla por diseño — una
+   puerta, un tile, un fondo — llega al borde a proposito y lo declara con `# sangra: si`, que apaga el aviso de margen (ver
    `iron_door.txt`). Con `# espejo: x` se escribe **solo la mitad izquierda** (o superior con
    `y`) y el script completa la otra: la mitad de trabajo y simetria garantizada. El espejo solo rellena celdas
    transparentes de la mitad derecha, asi que para sombrear distinto cada lado se escriben esas celdas a mano y
@@ -215,7 +217,7 @@ por caracter; portar tambien las validaciones, que son lo que hace util al scrip
 | Pixel de relleno tocando el fondo                     | Escalon sin contorno al cambiar de ancho                 | `--auto-outline`, o convertir ese pixel a `O` (el script lo lista)                |
 | Todo fusionado en un bloque macizo                    | Se "resolvieron" las fugas juntando las piezas           | Volver a separar las piezas; las fugas se arreglan con contorno, no con relleno   |
 | "Verificado visualmente" pero esta mal                | Se miro el PNG a 1x                                      | Generar y leer el preview 8x                                                      |
-| Sprite diminuto en el centro                          | No se planifico el encuadre                              | Tabla de spans que use el lienzo menos 1-2 px de margen; el script avisa bajo 70% |
+| Sprite diminuto en el centro                          | No se planifico el encuadre                              | Tabla de spans con >= 1 px de margen en el lado mayor; el script avisa bajo 70%   |
 | Capsula / rectangulo con tonos en vez del objeto      | Filas generadas con un helper de centrado o padding      | Escribir las filas a mano siguiendo los rasgos del paso 2                         |
 | PNG de 32x24 cuando se pidio 32x32                    | El mapa tenia menos filas                                | Rellenar con filas transparentes; pasar `--width`/`--height`                      |
 
