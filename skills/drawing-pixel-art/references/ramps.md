@@ -2,7 +2,7 @@
 
 Rampas de material con el matiz corrido (paso 4): sombras frias, luces calidas, cada escalon con la luminancia
 (`0.299 R + 0.587 G + 0.114 B`) que tendria sin corrimiento. Todo sprite que tenga ese material usa estos valores,
-asi dos objetos de piedra o de hierro salen del mismo color.
+asi dos objetos de piedra, de hierro o de madera salen del mismo color.
 
 | Simbolo | Piedra        | Hierro        | Uso                            |
 |---------|---------------|---------------|--------------------------------|
@@ -26,5 +26,30 @@ contrastado que la piedra; la diferencia entre los dos la hacen el contraste y e
 - **En un mapa con varios materiales**, las letras siguen siendo las de la familia del material (`W V U T S R`,
   `I i g`...); lo que se copia son los valores.
 
-La madera todavia no tiene rampa compartida: cada mapa usa la suya (`wood_door.txt`, `wood_shield.txt`,
-`stone_sword.txt`).
+## Madera
+
+Por ser un material calido, la madera corre de marron rojizo en la sombra a dorado en la luz, en vez de ir de
+azul a crema. Tiene mas escalones porque una tabla o un mango recorren mas luminancias que una cara de piedra: se
+toman los que hagan falta, con la misma regla de interpolacion.
+
+| Luminancia | RGB         | Matiz | Saturacion |
+|------------|-------------|-------|------------|
+| 29.5       | 48,22,20    | 4     | 58%        |
+| 38.9       | 62,30,24    | 9     | 61%        |
+| 55.8       | 84,46,32    | 16    | 62%        |
+| 75.0       | 110,64,40   | 21    | 64%        |
+| 95.7       | 136,84,50   | 24    | 63%        |
+| 119.5      | 164,108,62  | 27    | 62%        |
+| 140.8      | 186,130,78  | 29    | 58%        |
+| 165.7      | 206,158,100 | 33    | 51%        |
+| 202.7      | 232,200,140 | 39    | 40%        |
+| 228.4      | 246,228,184 | 43    | 25%        |
+
+**Varias maderas en un mismo sprite** (marco y hoja de una puerta, madera nueva y gastada): si las dos usaran la
+misma rampa se fundirian. La secundaria usa la misma rampa desaturada hacia el gris de su propia luminancia, con un
+factor `k` entre 0 y 1: cada canal pasa a `Y + k * (c - Y)`, donde `Y` es la luminancia, asi que el brillo no
+cambia. En la biblioteca: la hoja de `wood_door.txt` usa `k = 1` y el marco `k = 0.8`; las hojas de
+`iron_door.txt` son madera gastada, con `k = 0.35`.
+
+Fuente: `wood_shield.txt`, `stone_sword.txt`, `wood_door.txt`, `iron_door.txt` y `bow.txt`, que ya la usan. Los
+contornos de las piezas de madera no se tocaron: cada mapa conserva el suyo.
