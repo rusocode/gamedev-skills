@@ -91,6 +91,6 @@ drawing-pixel-art/
 │   └── bands.py     # Helper for even rims on shields, coins, and doors
 ├── references/
 │   ├── shapes.md    # Ready-made circles by diameter, for round shapes
-│   └── ramps.md     # Shared hue-shifted stone and iron ramps
+│   └── ramps.md     # Default hue-shifted stone, iron and wood ramps
 └── assets/          # Approved maps: the library new sprites start from
 ```

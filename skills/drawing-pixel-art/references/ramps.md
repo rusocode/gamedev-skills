@@ -1,8 +1,9 @@
-# Rampas compartidas (copiar valores, no inventarlos)
+# Rampas por defecto (copiar valores, no inventarlos)
 
 Rampas de material con el matiz corrido (paso 4): sombras frias, luces calidas, cada escalon con la luminancia
-(`0.299 R + 0.587 G + 0.114 B`) que tendria sin corrimiento. Todo sprite que tenga ese material usa estos valores,
-asi dos objetos de piedra, de hierro o de madera salen del mismo color.
+(`0.299 R + 0.587 G + 0.114 B`) que tendria sin corrimiento. Son las que usan los mapas de la biblioteca y el
+valor por defecto cuando el proyecto no tiene paleta propia; si la tiene, manda la del proyecto. Todo sprite de
+ese material usa los mismos valores, asi dos objetos de piedra, de hierro o de madera salen del mismo color.
 
 | Simbolo | Piedra        | Hierro        | Uso                            |
 |---------|---------------|---------------|--------------------------------|

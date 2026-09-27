@@ -106,9 +106,10 @@ Hay dos modos de falla distintos con modelos mas chicos, y el segundo es el peli
    ~240 grados al 25-35% de saturacion, luces ~50 grados al 7-10%) le dio volumen; uno marcado (sombras al 45%)
    convirtio la roca en un mineral azul. El limite es ese: se nota en el preview, pero no cambia de que material
    parece el objeto. Los materiales calidos ya lo traen si la rampa esta bien elegida (`gold.txt`, `chicken.txt`:
-   de naranja rojizo en la sombra a amarillo en la luz). **Piedra, hierro y madera no se inventan**: se copian las
-   rampas de `references/ramps.md`, que comparten todos los mapas de la biblioteca, para que dos objetos del mismo
-   material no salgan de dos colores distintos.
+   de naranja rojizo en la sombra a amarillo en la luz). **Un material no se inventa dos veces**: si el proyecto
+   tiene su propia paleta o sus rampas (buscarla antes de elegir colores), se usa esa; si no, piedra, hierro y
+   madera se copian de `references/ramps.md`, las rampas por defecto que comparten los mapas de la biblioteca. Asi
+   dos objetos del mismo material no salen de dos colores distintos.
 5. **Escribir el mapa.** Archivo de texto: paleta, linea en blanco, filas (formato en la cabecera de
    `scripts/pixelmap.py`). El
    mapa tiene **exactamente** las dimensiones del lienzo pedido (32x32 = 32 filas de 32 caracteres), rellenando con
