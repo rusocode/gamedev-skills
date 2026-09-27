@@ -1,6 +1,10 @@
 ---
 name: drawing-pixel-art
-description: Usar cuando haya que crear o retocar un sprite, icono, item o tile en pixel art (PNG de 16x16, 32x32, 64x64...) para un juego 2D, sin herramienta de dibujo a mano. Se activa ante "dibuja/crea un sprite", "haceme el pixel art de X", "genera la textura del item", "icono para el inventario", o cuando un sprite generado por codigo sale irreconocible, con bordes rotos, demasiado chico en el lienzo, o plano (caras de un solo tono, sin relieve).
+description: >-
+  Use when creating or fixing a pixel art sprite, icon, item, or tile (16x16, 32x32, 64x64 PNG...) for a 2D game
+  without a hand-drawing tool. Triggers on "draw/create a sprite", "make the pixel art for X", "generate the item
+  texture", "inventory icon", "dibujame un sprite", "haceme el pixel art de X", or when a code-generated sprite looks
+  unrecognizable, has broken edges, is too small on the canvas, or looks flat (single-tone faces, no relief).
 ---
 
 # Drawing Pixel Art
