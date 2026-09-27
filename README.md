@@ -48,15 +48,6 @@ Describe what you need in plain language. The agent picks the right skill from y
 
 You never type the skill's name. Mentioning "sprite", "texture", "item", or "icon" is enough for the agent to use it.
 
-## Skill structure
-
-Each skill contains:
-
-- `SKILL.md` - Instructions for the agent
-- `scripts/` - Helper scripts for automation (optional)
-- `references/` - Supporting documentation (optional)
-- `assets/` - Templates and static resources (optional)
-
 ## License
 
 [MIT](LICENSE)
