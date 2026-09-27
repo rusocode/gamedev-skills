@@ -66,8 +66,8 @@ Hay dos modos de falla distintos con modelos mas chicos, y el segundo es el peli
    menos 1 px de margen en ese lado, centrado en el lienzo. El margen maximo lo pone el 70% (en 32x32, hasta 4 px
    por lado): dentro de ese rango se elige el que mejor quede. El lado corto sigue las proporciones del objeto, asi
    que su hueco no es margen de sobra (una pocion es angosta). Excepcion: lo que llena su casilla por diseño — una
-   puerta, un tile, un fondo — llega al borde a proposito y lo declara con `# sangra: si`, que apaga el aviso de margen (ver
-   `iron_door.txt`). Con `# espejo: x` se escribe **solo la mitad izquierda** (o superior con
+   puerta, un tile, un fondo — llega al borde a proposito y lo declara con `# sangra: si`, que apaga el aviso de
+   margen (ver `iron_door.txt`). Con `# espejo: x` se escribe **solo la mitad izquierda** (o superior con
    `y`) y el script completa la otra: la mitad de trabajo y simetria garantizada. El espejo solo rellena celdas
    transparentes de la mitad derecha, asi que para sombrear distinto cada lado se escriben esas celdas a mano y
    el resto se deja en `.`. Escribir la tabla de spans
