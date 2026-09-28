@@ -119,6 +119,8 @@ class AuditTest(unittest.TestCase):
         self.assertEqual(code, 0, err)
         self.assertNotIn("Traceback", err)
         self.assertIn("VERDICT", out)
+        # a sprite with zero fill tones (the whole shape is a single color) IS flat, not exempt from the check
+        self.assertIn("FLAT", out)
 
 
 class FromPngTest(unittest.TestCase):

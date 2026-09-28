@@ -143,15 +143,33 @@ def apply_variant(palette, variants, name):
 
 # ----------------------------------------------------------------------------- render
 
-def render(args):
-    m = parse_map(args.map)
-    palette, transparent, rows = m["palette"], m["transparent"], m["rows"]
-    out = []
-    failures = []
+def flat_verdict(fill_counts):
+    """Given {key: pixel_count} for the fill (outline/background excluded), returns
+    (tones high-to-low, dominant key, dominant %, is_flat). `key` is usually a color. Shared by
+    render's PLANO check and audit's FLAT verdict, so the two commands can't disagree about what
+    counts as flat.
+    """
+    fill_total = sum(fill_counts.values())
+    tones = sorted(fill_counts.items(), key=lambda kv: -kv[1])
+    if not fill_total:
+        return tones, None, 0, len(tones) < FLAT_MIN_TONES
+    dom_key, dom_n = tones[0]
+    dom_pct = round(100 * dom_n / fill_total)
+    return tones, dom_key, dom_pct, len(tones) < FLAT_MIN_TONES or dom_pct > FLAT_MAX_DOMINANT
 
-    if args.variant:
-        out.append(f"variant '{args.variant}': recolored " + " ".join(apply_variant(palette, m["variants"], args.variant)))
 
+def make_is_transparent(grid, transparent, w, h):
+    def is_transparent(x, y):
+        return x < 0 or y < 0 or x >= w or y >= h or grid[y][x] == transparent
+    return is_transparent
+
+
+def build_grid(m, args):
+    """Validates row widths against --width/--height and applies '# espejo', returning
+    (grid, w, h, symmetry, mirror_note). `symmetry` folds in the mirror axis when the map declares
+    no explicit '# simetria' of its own, since mirroring already guarantees it.
+    """
+    rows = m["rows"]
     w, h = len(rows[0]), len(rows)
     errors = [f"row {y} has width {len(r)}, expected {w}" for y, r in enumerate(rows) if len(r) != w]
     if args.width and w != args.width:
@@ -161,8 +179,8 @@ def render(args):
     if errors:
         raise MapError("\n".join(errors))
 
-    grid = [list(r) for r in rows]
-    symmetry = m["symmetry"]
+    grid, transparent = [list(r) for r in rows], m["transparent"]
+    symmetry, mirror_note = m["symmetry"], None
     if m["mirror"]:
         # Transparent cells on the far half take their twin from the near half; painted cells are kept.
         if "x" in m["mirror"]:
@@ -177,21 +195,24 @@ def render(args):
                 for x in range(w):
                     if grid[my][x] == transparent:
                         grid[my][x] = grid[y][x]
-        out.append(f"mirror '{m['mirror']}': far half filled from the near half (canvas centre is the axis, so centre the sprite)")
+        mirror_note = (f"mirror '{m['mirror']}': far half filled from the near half "
+                       "(canvas centre is the axis, so centre the sprite)")
         if not symmetry:
             symmetry = m["mirror"]
+    return grid, w, h, symmetry, mirror_note
 
-    def is_transparent(x, y):
-        return x < 0 or y < 0 or x >= w or y >= h or grid[y][x] == transparent
 
-    if args.auto_outline and args.outline_symbol not in palette:
-        raise MapError(f"--auto-outline needs '{args.outline_symbol}' in the palette")
+def paint_pixels(grid, palette, transparent, is_transparent, w, h, args):
+    """Paints the RGBA image and measures it in the same pass: fill tones by color (not by symbol,
+    since two symbols can share a color), outline leaks, and the opaque bounding box.
 
+    Returns (img, fill_count, fill_syms, leaks, bbox), bbox = (min_x, min_y, max_x, max_y) with
+    max_x == -1 if the map has no opaque pixels.
+    """
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     px = img.load()
-    leaks = []
-    fill_count = {}      # color -> pixel count (colors, not symbols: two symbols can share a color)
-    fill_syms = {}        # color -> set of symbols using it, for the report below
+    leaks, errors = [], []
+    fill_count, fill_syms = {}, {}
     min_x, min_y, max_x, max_y = w, h, -1, -1
     for y in range(h):
         for x in range(w):
@@ -216,131 +237,214 @@ def render(args):
             px[x, y] = color
     if errors:
         raise MapError("\n".join(errors))
-    if max_x < 0:
-        raise MapError("the map has no opaque pixels (every cell is the transparent symbol)")
+    return img, fill_count, fill_syms, leaks, (min_x, min_y, max_x, max_y)
+
+
+def check_bounds(min_x, min_y, max_x, max_y, w, h, bleed):
+    """Reports the sprite's bounding box, canvas coverage, and edge-margin warning."""
+    bw, bh = max_x - min_x + 1, max_y - min_y + 1
+    cov = round(100 * max(bw / w, bh / h))
+    lines = [f"sprite bounds: cols {min_x}..{max_x}, rows {min_y}..{max_y} ({bw} x {bh}): "
+             f"fills {cov}% of the canvas on its longest side"]
+    if cov < 70:
+        lines.append("WARNING: sprite uses under 70% of the canvas; enlarge the silhouette unless the sprite is meant to be small")
+    if min_x == 0 or min_y == 0 or max_x == w - 1 or max_y == h - 1:
+        if bleed:
+            lines.append("bleed: sprite fills its cell to the edge, as declared")
+        else:
+            lines.append("WARNING: sprite touches the canvas edge; leave at least 1 px of margin "
+                         "(a door, tile or backdrop that fills its cell declares '# sangra: si')")
+    return lines
+
+
+def report_flat_tones(fill_count, fill_syms, failures):
+    """Reports the fill's tone breakdown (calibrated on 32x32 items: flat ones had 4 fill tones
+    with 43-45% in one tone, detailed ones 7 tones and 33%) and appends any PLANO failure.
+    """
+    def label(color):
+        return "/".join(sorted(fill_syms[color]))
+    tones, dom_color, dom_pct, is_flat = flat_verdict(fill_count)
+    fill_total = sum(n for _, n in tones)
+    lines = [f"fill tones: {len(tones)} ("
+             + " ".join(f"'{label(c)}'={round(100 * v / fill_total)}%" for c, v in tones)
+             + f"); dominant '{label(dom_color)}' covers {dom_pct}% of the fill"]
+    if len(tones) < FLAT_MIN_TONES:
+        failures.append(f"PLANO: only {len(tones)} fill tones; a sprite this size needs at least {FLAT_MIN_TONES} "
+                        "(ramp of 5-6 per material plus glint). Add tones, do not shrink the sprite.")
+    if dom_pct > FLAT_MAX_DOMINANT:
+        failures.append(f"PLANO: '{label(dom_color)}' covers {dom_pct}% of the fill (max {FLAT_MAX_DOMINANT}%); the faces are flat "
+                        "blocks. Break them with ramp steps, dither at tone borders, glint, dimples and an inner dark rim.")
+    return lines
+
+
+def check_outline_leaks(leaks, args):
+    """Reports the auto-outline count, or raises if leaks were left unhandled."""
     if args.auto_outline:
-        out.append(f"auto-outline: {len(leaks)} edge pixels painted as '{args.outline_symbol}'")
-    elif leaks and not args.no_validate:
+        return f"auto-outline: {len(leaks)} edge pixels painted as '{args.outline_symbol}'"
+    if leaks and not args.no_validate:
         raise MapError(f"Outline leak: these non-outline pixels touch transparency. Make them '{args.outline_symbol}', "
                        "or re-run with --auto-outline (never merge separate pieces to silence this):\n  " + "\n  ".join(leaks))
+    return None
+
+
+def find_holes(is_transparent, w, h):
+    """Flood-fills from the canvas border to mark the outside, then returns one description per
+    remaining enclosed transparent region -- a ring, the gap between a bow and its string, a
+    handle's opening.
+    """
+    seen = [[False] * w for _ in range(h)]
+    queue = deque()
+    for x in range(w):
+        for y in (0, h - 1):
+            if is_transparent(x, y) and not seen[y][x]:
+                seen[y][x] = True
+                queue.append((x, y))
+    for y in range(h):
+        for x in (0, w - 1):
+            if is_transparent(x, y) and not seen[y][x]:
+                seen[y][x] = True
+                queue.append((x, y))
+    while queue:
+        x, y = queue.popleft()
+        for dx, dy in DIRS:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and is_transparent(nx, ny):
+                seen[ny][nx] = True
+                queue.append((nx, ny))
+
+    holes = []
+    for y in range(h):
+        for x in range(w):
+            if seen[y][x] or not is_transparent(x, y):
+                continue
+            size, hx0, hy0, hx1, hy1 = 0, x, y, x, y
+            seen[y][x] = True
+            queue.append((x, y))
+            while queue:
+                cx, cy = queue.popleft()
+                size += 1
+                hx0, hx1, hy0, hy1 = min(hx0, cx), max(hx1, cx), min(hy0, cy), max(hy1, cy)
+                for dx, dy in DIRS:
+                    nx, ny = cx + dx, cy + dy
+                    if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and is_transparent(nx, ny):
+                        seen[ny][nx] = True
+                        queue.append((nx, ny))
+            holes.append(f"cols {hx0}..{hx1}, rows {hy0}..{hy1} ({size} px)")
+    return holes
+
+
+def report_holes(is_transparent, w, h, declared_holes, failures):
+    """Runs find_holes() and returns its report line; appends a failure if the declared
+    '# huecos' count doesn't match what the silhouette actually has.
+    """
+    holes = find_holes(is_transparent, w, h)
+    line = (f"enclosed transparent holes: {len(holes)}"
+            + (": " + "; ".join(holes) if holes else " (a ring, eye, handle or bow declared as a feature needs at least one)"))
+    if declared_holes is not None and len(holes) != declared_holes:
+        failures.append(f"declared '# holes: {declared_holes}' but the silhouette has {len(holes)}. "
+                        "A hole is transparent pixels fully surrounded by opaque ones.")
+    return line
+
+
+def find_symmetry_mismatches(is_transparent, min_x, min_y, max_x, max_y, symmetry):
+    """Returns '(x,y)' for each silhouette pixel with no mirror twin across `symmetry`'s axis/axes,
+    counting each violating pair once (a plain scan visits and reports every pair from both sides).
+    """
+    mismatch, seen_pairs = [], set()
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            mx = min_x + max_x - x if "x" in symmetry else x
+            my = min_y + max_y - y if "y" in symmetry else y
+            if (x, y) == (mx, my):
+                continue
+            pair = frozenset({(x, y), (mx, my)})
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+            if is_transparent(x, y) != is_transparent(mx, my):
+                painted = (x, y) if not is_transparent(x, y) else (mx, my)
+                mismatch.append(f"({painted[0]},{painted[1]})")
+    return mismatch
+
+
+def report_symmetry(is_transparent, min_x, min_y, max_x, max_y, symmetry, failures):
+    """Returns the symmetry report line, or None (with the failure filed) when it fails."""
+    if not symmetry:
+        return None
+    mismatch = find_symmetry_mismatches(is_transparent, min_x, min_y, max_x, max_y, symmetry)
+    if not mismatch:
+        return f"symmetry '{symmetry}': silhouette is mirror-symmetric"
+    failures.append(f"declared '# symmetry: {symmetry}' but {len(mismatch)} silhouette pixels have no mirror twin: "
+                    + " ".join(mismatch[:12]))
+    return None
+
+
+def report_checklists(m, bw, bh, failures):
+    """Returns the '# rasgo'/'# relieve' checklists to verify against the preview, or files a
+    failure when a sprite this size skipped '# relieve' declarations entirely.
+    """
+    lines = []
+    if m["features"]:
+        lines.append("CHECK each feature in the preview and state where it is (rows/cols) in your report:")
+        lines.extend(f"  [ ] {f}" for f in m["features"])
+    if m["relief"]:
+        lines.append("CHECK each relief item in the preview (it must be visible at 8x, not just present in the map):")
+        lines.extend(f"  [ ] {r}" for r in m["relief"])
+    elif max(bw, bh) >= FLAT_CHECK_MIN_SIDE:
+        failures.append("no '# relieve:' lines: declare the shading (ramp, glint, dither, dimples, inner rim) before rendering; "
+                        "the map is the spec, the render is the check")
+    return lines
+
+
+def save_preview(img, args, w, h):
+    big = img.resize((w * args.preview, h * args.preview), Image.NEAREST)
+    bg = Image.new("RGBA", big.size, PREVIEW_BG)
+    bg.alpha_composite(big)
+    preview_path = re.sub(r"\.[^./\\]+$", "", args.out) + "_preview.png"
+    bg.convert("RGB").save(preview_path, "PNG")
+    return f"preview {preview_path} ({args.preview}x)"
+
+
+def render(args):
+    m = parse_map(args.map)
+    palette, transparent = m["palette"], m["transparent"]
+    out, failures = [], []
+
+    if args.variant:
+        out.append(f"variant '{args.variant}': recolored " + " ".join(apply_variant(palette, m["variants"], args.variant)))
+
+    grid, w, h, symmetry, mirror_note = build_grid(m, args)
+    if mirror_note:
+        out.append(mirror_note)
+    is_transparent = make_is_transparent(grid, transparent, w, h)
+
+    if args.auto_outline and args.outline_symbol not in palette:
+        raise MapError(f"--auto-outline needs '{args.outline_symbol}' in the palette")
+
+    img, fill_count, fill_syms, leaks, (min_x, min_y, max_x, max_y) = paint_pixels(
+        grid, palette, transparent, is_transparent, w, h, args)
+    if max_x < 0:
+        raise MapError("the map has no opaque pixels (every cell is the transparent symbol)")
+    leak_note = check_outline_leaks(leaks, args)
+    if leak_note:
+        out.append(leak_note)
 
     img.save(args.out, "PNG")
     out.append(f"saved {args.out} ({w} x {h})")
 
-    if max_x >= 0:
-        bw, bh = max_x - min_x + 1, max_y - min_y + 1
-        cov = round(100 * max(bw / w, bh / h))
-        out.append(f"sprite bounds: cols {min_x}..{max_x}, rows {min_y}..{max_y} ({bw} x {bh}): fills {cov}% of the canvas on its longest side")
-        if cov < 70:
-            out.append("WARNING: sprite uses under 70% of the canvas; enlarge the silhouette unless the sprite is meant to be small")
-        if min_x == 0 or min_y == 0 or max_x == w - 1 or max_y == h - 1:
-            if m["bleed"]:
-                out.append("bleed: sprite fills its cell to the edge, as declared")
-            else:
-                out.append("WARNING: sprite touches the canvas edge; leave at least 1 px of margin "
-                           "(a door, tile or backdrop that fills its cell declares '# sangra: si')")
+    bw, bh = max_x - min_x + 1, max_y - min_y + 1
+    out.extend(check_bounds(min_x, min_y, max_x, max_y, w, h, m["bleed"]))
+    if fill_count and max(bw, bh) >= FLAT_CHECK_MIN_SIDE:
+        out.extend(report_flat_tones(fill_count, fill_syms, failures))
 
-        # Relief: a sprite whose fill is a few flat blocks passes every silhouette check and still looks flat.
-        # Calibrated on 32x32 items: flat ones had 4 fill tones with 43-45% in one tone, detailed ones 7 tones and 33%.
-        fill_total = sum(fill_count.values())
-        if fill_total and max(bw, bh) >= FLAT_CHECK_MIN_SIDE:
-            def label(color):
-                return "/".join(sorted(fill_syms[color]))
-            tones = sorted(fill_count.items(), key=lambda kv: -kv[1])
-            dom_color, dom_n = tones[0]
-            dom_pct = round(100 * dom_n / fill_total)
-            out.append(f"fill tones: {len(tones)} ("
-                       + " ".join(f"'{label(c)}'={round(100*v/fill_total)}%" for c, v in tones)
-                       + f"); dominant '{label(dom_color)}' covers {dom_pct}% of the fill")
-            if len(tones) < FLAT_MIN_TONES:
-                failures.append(f"PLANO: only {len(tones)} fill tones; a sprite this size needs at least {FLAT_MIN_TONES} "
-                                "(ramp of 5-6 per material plus glint). Add tones, do not shrink the sprite.")
-            if dom_pct > FLAT_MAX_DOMINANT:
-                failures.append(f"PLANO: '{label(dom_color)}' covers {dom_pct}% of the fill (max {FLAT_MAX_DOMINANT}%); the faces are flat "
-                                "blocks. Break them with ramp steps, dither at tone borders, glint, dimples and an inner dark rim.")
+    out.append(report_holes(is_transparent, w, h, m["holes"], failures))
+    symmetry_note = report_symmetry(is_transparent, min_x, min_y, max_x, max_y, symmetry, failures)
+    if symmetry_note:
+        out.append(symmetry_note)
 
-        # Enclosed transparent regions = holes (a ring, the gap between bow and string, a handle opening).
-        seen = [[False] * w for _ in range(h)]
-        queue = deque()
-        for x in range(w):
-            for y in (0, h - 1):
-                if is_transparent(x, y) and not seen[y][x]:
-                    seen[y][x] = True
-                    queue.append((x, y))
-        for y in range(h):
-            for x in (0, w - 1):
-                if is_transparent(x, y) and not seen[y][x]:
-                    seen[y][x] = True
-                    queue.append((x, y))
-        while queue:
-            x, y = queue.popleft()
-            for dx, dy in DIRS:
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and is_transparent(nx, ny):
-                    seen[ny][nx] = True
-                    queue.append((nx, ny))
-        holes = []
-        for y in range(h):
-            for x in range(w):
-                if seen[y][x] or not is_transparent(x, y):
-                    continue
-                size, hx0, hy0, hx1, hy1 = 0, x, y, x, y
-                seen[y][x] = True
-                queue.append((x, y))
-                while queue:
-                    cx, cy = queue.popleft()
-                    size += 1
-                    hx0, hx1, hy0, hy1 = min(hx0, cx), max(hx1, cx), min(hy0, cy), max(hy1, cy)
-                    for dx, dy in DIRS:
-                        nx, ny = cx + dx, cy + dy
-                        if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and is_transparent(nx, ny):
-                            seen[ny][nx] = True
-                            queue.append((nx, ny))
-                holes.append(f"cols {hx0}..{hx1}, rows {hy0}..{hy1} ({size} px)")
-        out.append(f"enclosed transparent holes: {len(holes)}"
-                   + (": " + "; ".join(holes) if holes else " (a ring, eye, handle or bow declared as a feature needs at least one)"))
-        if m["holes"] is not None and len(holes) != m["holes"]:
-            failures.append(f"declared '# holes: {m['holes']}' but the silhouette has {len(holes)}. "
-                            "A hole is transparent pixels fully surrounded by opaque ones.")
-
-        if symmetry:
-            mismatch, seen_pairs = [], set()
-            for y in range(min_y, max_y + 1):
-                for x in range(min_x, max_x + 1):
-                    mx = min_x + max_x - x if "x" in symmetry else x
-                    my = min_y + max_y - y if "y" in symmetry else y
-                    if (x, y) == (mx, my):
-                        continue
-                    pair = frozenset({(x, y), (mx, my)})
-                    if pair in seen_pairs:
-                        continue  # each pair is visited from both sides; count it once
-                    seen_pairs.add(pair)
-                    if is_transparent(x, y) != is_transparent(mx, my):
-                        painted = (x, y) if not is_transparent(x, y) else (mx, my)
-                        mismatch.append(f"({painted[0]},{painted[1]})")
-            if not mismatch:
-                out.append(f"symmetry '{symmetry}': silhouette is mirror-symmetric")
-            else:
-                failures.append(f"declared '# symmetry: {symmetry}' but {len(mismatch)} silhouette pixels have no mirror twin: "
-                                + " ".join(mismatch[:12]))
-
-    if m["features"]:
-        out.append("CHECK each feature in the preview and state where it is (rows/cols) in your report:")
-        out.extend(f"  [ ] {f}" for f in m["features"])
-    if m["relief"]:
-        out.append("CHECK each relief item in the preview (it must be visible at 8x, not just present in the map):")
-        out.extend(f"  [ ] {r}" for r in m["relief"])
-    elif max_x >= 0 and max(max_x - min_x + 1, max_y - min_y + 1) >= FLAT_CHECK_MIN_SIDE:
-        failures.append("no '# relieve:' lines: declare the shading (ramp, glint, dither, dimples, inner rim) before rendering; "
-                        "the map is the spec, the render is the check")
-
+    out.extend(report_checklists(m, bw, bh, failures))
     if args.preview > 0:
-        big = img.resize((w * args.preview, h * args.preview), Image.NEAREST)
-        bg = Image.new("RGBA", big.size, PREVIEW_BG)
-        bg.alpha_composite(big)
-        preview_path = re.sub(r"\.[^./\\]+$", "", args.out) + "_preview.png"
-        bg.convert("RGB").save(preview_path, "PNG")
-        out.append(f"preview {preview_path} ({args.preview}x)")
+        out.append(save_preview(img, args, w, h))
 
     print("\n".join(out))
     if failures:
@@ -477,8 +581,7 @@ def audit(args):
     # The outline is the darkest colour; everything else is fill.
     outline = min(counts, key=lambda c: lum(c))
     fill = {c: n for c, n in counts.items() if c != outline}
-    fill_total = sum(fill.values()) or 1
-    dom = (max(fill.values()) / fill_total) if fill else 0.0
+    tones, _, dom_pct, flat = flat_verdict(fill)
 
     xs = [x for y in range(h) for x in range(w) if get[x, y][3] > 0]
     ys = [y for y in range(h) for x in range(w) if get[x, y][3] > 0]
@@ -487,12 +590,11 @@ def audit(args):
 
     out = [f"{args.png}: {w}x{h}, {len(px)} opaque px, bbox {bw}x{bh} ({cov}% of the canvas)",
            f"colours: {len(counts)} ({once} used by a single pixel, {semi} semi-transparent)",
-           f"fill tones: {len(fill)}, dominant covers {round(100 * dom)}%",
+           f"fill tones: {len(tones)}, dominant covers {dom_pct}%",
            f"edge pixels: {len(edge)}, median luminance {edge_med:.0f}, brightest {edge_max:.0f}"]
 
     authored = len(counts) <= args.max_colors and once <= len(counts) * 0.15
     has_outline = edge_med <= 90
-    flat = len(fill) < FLAT_MIN_TONES or dom * 100 > FLAT_MAX_DOMINANT
 
     verdict = []
     if not authored:
@@ -503,7 +605,7 @@ def audit(args):
         verdict.append(f"NO OUTLINE: the border's median luminance is {edge_med:.0f} (brightest {edge_max:.0f}); "
                        "the sprite dissolves into the background. Step 6.")
     if flat:
-        verdict.append(f"FLAT: {len(fill)} fill tones, dominant {round(100 * dom)}% "
+        verdict.append(f"FLAT: {len(tones)} fill tones, dominant {dom_pct}% "
                        f"(needs >= {FLAT_MIN_TONES} tones and <= {FLAT_MAX_DOMINANT}%). Step 7.")
     if cov < 70:
         verdict.append(f"SMALL: fills {cov}% of the canvas. Step 3.")
