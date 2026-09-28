@@ -46,9 +46,15 @@ class MapError(Exception):
 
 
 def parse_color(text):
-    parts = [int(p) for p in re.split(r"\s*,\s*", text.strip())]
-    if len(parts) not in (3, 4):
+    raw = re.split(r"\s*,\s*", text.strip())
+    if len(raw) not in (3, 4):
         raise MapError(f"bad color '{text}' (expected R,G,B[,A])")
+    try:
+        parts = [int(p) for p in raw]
+    except ValueError:
+        raise MapError(f"bad color '{text}': every channel must be an integer 0-255")
+    if any(p < 0 or p > 255 for p in parts):
+        raise MapError(f"bad color '{text}': every channel must be 0-255")
     return (parts[0], parts[1], parts[2], parts[3] if len(parts) == 4 else 255)
 
 
@@ -184,7 +190,8 @@ def render(args):
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     px = img.load()
     leaks = []
-    fill_count = {}
+    fill_count = {}      # color -> pixel count (colors, not symbols: two symbols can share a color)
+    fill_syms = {}        # color -> set of symbols using it, for the report below
     min_x, min_y, max_x, max_y = w, h, -1, -1
     for y in range(h):
         for x in range(w):
@@ -204,10 +211,13 @@ def render(args):
                         color = palette[args.outline_symbol]
                     leaks.append(f"({x},{y}) '{ch}'")
             if color != palette.get(args.outline_symbol):
-                fill_count[ch] = fill_count.get(ch, 0) + 1
+                fill_count[color] = fill_count.get(color, 0) + 1
+                fill_syms.setdefault(color, set()).add(ch)
             px[x, y] = color
     if errors:
         raise MapError("\n".join(errors))
+    if max_x < 0:
+        raise MapError("the map has no opaque pixels (every cell is the transparent symbol)")
     if args.auto_outline:
         out.append(f"auto-outline: {len(leaks)} edge pixels painted as '{args.outline_symbol}'")
     elif leaks and not args.no_validate:
@@ -234,16 +244,19 @@ def render(args):
         # Calibrated on 32x32 items: flat ones had 4 fill tones with 43-45% in one tone, detailed ones 7 tones and 33%.
         fill_total = sum(fill_count.values())
         if fill_total and max(bw, bh) >= FLAT_CHECK_MIN_SIDE:
+            def label(color):
+                return "/".join(sorted(fill_syms[color]))
             tones = sorted(fill_count.items(), key=lambda kv: -kv[1])
-            dom_sym, dom_n = tones[0]
+            dom_color, dom_n = tones[0]
             dom_pct = round(100 * dom_n / fill_total)
-            out.append(f"fill tones: {len(tones)} (" + " ".join(f"'{k}'={round(100*v/fill_total)}%" for k, v in tones)
-                       + f"); dominant '{dom_sym}' covers {dom_pct}% of the fill")
+            out.append(f"fill tones: {len(tones)} ("
+                       + " ".join(f"'{label(c)}'={round(100*v/fill_total)}%" for c, v in tones)
+                       + f"); dominant '{label(dom_color)}' covers {dom_pct}% of the fill")
             if len(tones) < FLAT_MIN_TONES:
                 failures.append(f"PLANO: only {len(tones)} fill tones; a sprite this size needs at least {FLAT_MIN_TONES} "
                                 "(ramp of 5-6 per material plus glint). Add tones, do not shrink the sprite.")
             if dom_pct > FLAT_MAX_DOMINANT:
-                failures.append(f"PLANO: '{dom_sym}' covers {dom_pct}% of the fill (max {FLAT_MAX_DOMINANT}%); the faces are flat "
+                failures.append(f"PLANO: '{label(dom_color)}' covers {dom_pct}% of the fill (max {FLAT_MAX_DOMINANT}%); the faces are flat "
                                 "blocks. Break them with ramp steps, dither at tone borders, glint, dimples and an inner dark rim.")
 
         # Enclosed transparent regions = holes (a ring, the gap between bow and string, a handle opening).
@@ -291,13 +304,20 @@ def render(args):
                             "A hole is transparent pixels fully surrounded by opaque ones.")
 
         if symmetry:
-            mismatch = []
+            mismatch, seen_pairs = [], set()
             for y in range(min_y, max_y + 1):
                 for x in range(min_x, max_x + 1):
                     mx = min_x + max_x - x if "x" in symmetry else x
                     my = min_y + max_y - y if "y" in symmetry else y
+                    if (x, y) == (mx, my):
+                        continue
+                    pair = frozenset({(x, y), (mx, my)})
+                    if pair in seen_pairs:
+                        continue  # each pair is visited from both sides; count it once
+                    seen_pairs.add(pair)
                     if is_transparent(x, y) != is_transparent(mx, my):
-                        mismatch.append(f"({x},{y})")
+                        painted = (x, y) if not is_transparent(x, y) else (mx, my)
+                        mismatch.append(f"({painted[0]},{painted[1]})")
             if not mismatch:
                 out.append(f"symmetry '{symmetry}': silhouette is mirror-symmetric")
             else:
@@ -335,6 +355,7 @@ def from_png(args):
     header = []
     transparent = args.transparent_symbol
     old_palette_lines = []
+    variant_syms = set()    # symbols any '# variant:' line recolors; keep them even if unused in this PNG
     if args.palette:
         old = parse_map(args.palette)
         header = old["header"]
@@ -344,6 +365,8 @@ def from_png(args):
         if args.variant:
             apply_variant(sym_color, old["variants"], args.variant)
         old_palette_lines = list(old["palette"].keys())
+        for spec in old["variants"].values():
+            variant_syms.update(re.findall(r"(\S)\s*=", spec))
     by_color = {rgba: sym for sym, rgba in sym_color.items()}
     used = set(sym_color) | {transparent}
 
@@ -391,10 +414,13 @@ def from_png(args):
     present = {ch for r in rows for ch in r}
     lines = list(header)
     lines.append(f"{transparent} = transparent")
-    dropped = []
+    dropped, kept_for_variant = [], []
     for sym in old_palette_lines:
         if sym in present:
             lines.append(f"{sym} = {color_text(base_palette[sym])}")
+        elif sym in variant_syms:
+            lines.append(f"{sym} = {color_text(base_palette[sym])}")
+            kept_for_variant.append(sym)
         else:
             dropped.append(sym)
     for c in order:
@@ -404,12 +430,15 @@ def from_png(args):
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines) + "\n")
 
-    print(f"wrote {args.out} ({w} x {h}, {len(present) - 1} colors, {len(order)} new symbols)")
+    opaque_syms = present - {transparent}
+    print(f"wrote {args.out} ({w} x {h}, {len(opaque_syms)} colors, {len(order)} new symbols)")
     if snapped:
         print(f"snapped {snapped} off-by-<={args.tolerance} colors to their existing palette symbol (editor/GDI+ rounding)")
     if order:
         print("new colors got symbols: " + " ".join(f"{by_color[c]}={color_text(c)}" for c in order)
               + "; rename them to something meaningful if they replace an old tone")
+    if kept_for_variant:
+        print("kept unused palette symbols because a '# variant:' line still recolors them: " + " ".join(kept_for_variant))
     if dropped:
         print("dropped palette symbols no longer used in the PNG: " + " ".join(dropped))
     if header:
@@ -449,7 +478,7 @@ def audit(args):
     outline = min(counts, key=lambda c: lum(c))
     fill = {c: n for c, n in counts.items() if c != outline}
     fill_total = sum(fill.values()) or 1
-    dom = max(fill.values()) / fill_total
+    dom = (max(fill.values()) / fill_total) if fill else 0.0
 
     xs = [x for y in range(h) for x in range(w) if get[x, y][3] > 0]
     ys = [y for y in range(h) for x in range(w) if get[x, y][3] > 0]
@@ -532,6 +561,10 @@ def main(argv=None):
         args.func(args)
     except MapError as e:
         print(f"ERROR: {e}", file=sys.stderr)
+        return 1
+    except OSError as e:
+        # missing/unreadable map or PNG, missing output directory, corrupt image: report it, not a traceback
+        print(f"ERROR: {e.strerror or e}: '{e.filename}'" if e.filename else f"ERROR: {e}", file=sys.stderr)
         return 1
     return 0
 
