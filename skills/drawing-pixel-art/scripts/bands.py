@@ -43,7 +43,6 @@ Uso tipico:
 """
 import math
 
-DIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 LIGHT_UPPER_LEFT = (-0.7071, -0.7071)
 
 
@@ -62,36 +61,40 @@ def bands(spans, width, height):
         for x in range(a, b + 1):
             solid[y][x] = True
 
-    far = width + height
-    layer = [[far if solid[y][x] else 0 for x in range(width)] for y in range(height)]
-    changed = True
-    while changed:                                  # relajacion hasta punto fijo: lienzos chicos, sobra
-        changed = False
-        for y in range(height):
-            for x in range(width):
-                if not solid[y][x]:
-                    continue
-                best = far
-                for dx, dy in DIRS:
-                    nx, ny = x + dx, y + dy
-                    inside = 0 <= nx < width and 0 <= ny < height and solid[ny][nx]
-                    best = min(best, (layer[ny][nx] if inside else 0) + 1)
-                if best < layer[y][x]:
-                    layer[y][x] = best
-                    changed = True
+    # Distancia exacta (4-vecinos) al transparente u borde de lienzo mas cercano, en dos barridos
+    # (Rosenfeld & Pfaltz): ida (arriba-izquierda) mirando arriba/izquierda, vuelta (abajo-derecha)
+    # mirando abajo/derecha. Cada pixel transparente ya vale 0, asi que el borde del lienzo actua
+    # como limite implicito sin necesitar relajacion hasta punto fijo.
+    layer = [[0] * width for _ in range(height)]
+    for y in range(height):
+        for x in range(width):
+            if not solid[y][x]:
+                continue
+            up = layer[y - 1][x] if y > 0 else 0
+            left = layer[y][x - 1] if x > 0 else 0
+            layer[y][x] = min(up, left) + 1
+    for y in range(height - 1, -1, -1):
+        for x in range(width - 1, -1, -1):
+            if not solid[y][x]:
+                continue
+            down = layer[y + 1][x] if y < height - 1 else 0
+            right = layer[y][x + 1] if x < width - 1 else 0
+            layer[y][x] = min(layer[y][x], down + 1, right + 1)
     return solid, layer
 
 
 def bevel_index(x, y, solid, lo, hi, light=LIGHT_UPPER_LEFT, radius=6):
     """Indice de rampa en `[lo, hi]` para un pixel de reborde, por la normal de la superficie.
 
-    La normal sale del pixel hacia el transparente mas cercano dentro de `radius`. Su producto punto
-    con `light` da -1 (de espaldas a la luz) a 1 (de frente), que se reparte en los escalones
+    La normal sale del pixel hacia el promedio de los transparentes mas cercanos dentro de `radius`
+    (una esquina suele tener dos, a la misma distancia y en direcciones distintas; promediarlas evita
+    que el orden de barrido elija una sola y sesgue el resultado hacia esa direccion). Su producto
+    punto con `light` da -1 (de espaldas a la luz) a 1 (de frente), que se reparte en los escalones
     disponibles. Reservar el tono mas oscuro de la rampa para las ranuras y el campo en sombra
     pasando `lo=1`: si el reborde tambien llega a el, la ranura deja de leerse.
     """
     height, width = len(solid), len(solid[0])
-    best, best_d2 = None, None
+    best_d2, ties = None, []
     for dy in range(-radius, radius + 1):
         for dx in range(-radius, radius + 1):
             nx, ny = x + dx, y + dy
@@ -99,10 +102,13 @@ def bevel_index(x, y, solid, lo, hi, light=LIGHT_UPPER_LEFT, radius=6):
                 continue
             d2 = dx * dx + dy * dy                  # el transparente mas cercano, tambien fuera del lienzo
             if best_d2 is None or d2 < best_d2:
-                best_d2, best = d2, (nx - x, ny - y)
-    if best is None:
+                best_d2, ties = d2, [(dx, dy)]
+            elif d2 == best_d2:
+                ties.append((dx, dy))
+    if best_d2 is None:
         return hi                                   # mas hondo que `radius`: no es reborde
-    vx, vy = best
+    vx = sum(dx for dx, _ in ties) / len(ties)
+    vy = sum(dy for _, dy in ties) / len(ties)
     norm = math.hypot(vx, vy) or 1.0
     dot = (vx / norm) * light[0] + (vy / norm) * light[1]
     steps = hi - lo + 1
