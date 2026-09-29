@@ -1,7 +1,9 @@
 ---
 name: council
-description: Usar cuando el usuario invoca /council para revisar un archivo o directorio con revisores de incentivos opuestos (simplifier, guardian, optimizer, architect, conservative, modernizer, ambassador).
-argument-hint: <ruta> [rol1,rol2,... | todos]
+description: >
+  Use when the user invokes /council to review a file or directory with reviewers of opposing incentives
+  (simplifier, guardian, optimizer, architect, conservative, modernizer, ambassador).
+argument-hint: <path> [role1, role2, ... | all]
 disable-model-invocation: true
 ---
 
@@ -15,10 +17,10 @@ central de esta skill es verificar, no recolectar.
 
 ## Argumentos
 
-`$ARGUMENTS` = `<ruta> [roles]`.
+`$ARGUMENTS` = `<path> [roles]`.
 
 - Sin ruta: preguntala y pará.
-- Roles: lista separada por comas, o `todos`. Por defecto `simplifier, guardian, optimizer`.
+- Roles: lista separada por comas, o `all`. Por defecto `simplifier, guardian, optimizer`.
 - Las definiciones están en `roles.md`, en el mismo directorio que este archivo. Si piden un rol que no está
   ahí, listá los válidos y pará.
 - `simplifier`, `guardian` y `optimizer` pasaron varias rondas de prueba contra código real; `architect`,
@@ -71,8 +73,8 @@ central de esta skill es verificar, no recolectar.
    inyección de dependencias, JSON o configuración lo usan sin que aparezca como llamada; y mirá la visibilidad
    antes de dar por sobrante una clase o un método público.
 
-   Asigná un estado. **Confirmado**: la premisa central se comprobó y ningún otro eslabón la contradice.
-   **Refutado**: la premisa central no se cumple, es condicional ("si alguien modificara...", "aunque hoy no
+   Asigná un estado. **Confirmado**: la premisa central se comprobó y ningún otro eslabón la contradice. **Refutado**:
+   la premisa central no se cumple, es condicional ("si alguien modificara...", "aunque hoy no
    pasa") sin código actual que la produzca, o el comportamiento que el hallazgo quiere cambiar está puesto a
    propósito — lo dice un documento del proyecto, lo explica un javadoc, o hay un test que lo fija. **Dudoso**: la
    premisa se cumple pero un eslabón secundario depende de datos que solo se ven en ejecución.
@@ -147,14 +149,14 @@ Omití las secciones vacías. Cerrá ofreciendo aplicar, de a uno, los confirmad
 
 ## Errores comunes
 
-| Error                                                  | Corrección                                                  |
-|--------------------------------------------------------|-------------------------------------------------------------|
-| Ordenar y deduplicar hallazgos y llamarlo verificación | Verificar es abrir el código citado y el llamador           |
-| Heredar la severidad que puso el revisor               | Reclasificar con los criterios: sin camino real no hay alta |
-| Confirmar mirando solo el inicio y el final del camino | Comprobar cada eslabón; los falsos suelen romperse en medio |
-| Pegar el código en el prompt del revisor               | Pasar rutas, para que pueda buscar usos                     |
-| Saltear el archivo de instrucciones del proyecto        | Sus decisiones documentadas refutan muchos falsos positivos |
-| Cruzar todos los confirmados contra todos los roles     | Solo los que pasan el filtro; el resto es ruido pago        |
-| Dar por buena una objeción del examen cruzado sin leer  | Una objeción también se apoya en premisas falsas            |
-| Nombrar la premisa central después de verificar         | Primero se nombra, después se comprueba; si no, se retrofitea |
-| Salvar un hallazgo con premisa refutada reformulándolo  | Va a Refutados; lo que quede en pie es un hallazgo nuevo    |
+| Error                                                  | Corrección                                                    |
+|--------------------------------------------------------|---------------------------------------------------------------|
+| Ordenar y deduplicar hallazgos y llamarlo verificación | Verificar es abrir el código citado y el llamador             |
+| Heredar la severidad que puso el revisor               | Reclasificar con los criterios: sin camino real no hay alta   |
+| Confirmar mirando solo el inicio y el final del camino | Comprobar cada eslabón; los falsos suelen romperse en medio   |
+| Pegar el código en el prompt del revisor               | Pasar rutas, para que pueda buscar usos                       |
+| Saltear el archivo de instrucciones del proyecto       | Sus decisiones documentadas refutan muchos falsos positivos   |
+| Cruzar todos los confirmados contra todos los roles    | Solo los que pasan el filtro; el resto es ruido pago          |
+| Dar por buena una objeción del examen cruzado sin leer | Una objeción también se apoya en premisas falsas              |
+| Nombrar la premisa central después de verificar        | Primero se nombra, después se comprueba; si no, se retrofitea |
+| Salvar un hallazgo con premisa refutada reformulándolo | Va a Refutados; lo que quede en pie es un hallazgo nuevo      |

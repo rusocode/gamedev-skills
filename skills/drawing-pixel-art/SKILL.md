@@ -1,6 +1,6 @@
 ---
 name: drawing-pixel-art
-description: >-
+description: >
   Use when creating or fixing a pixel art sprite, icon, item, or tile (16x16, 32x32, 64x64 PNG...) for a 2D game
   without a hand-drawing tool. Triggers on "draw/create a sprite", "make the pixel art for X", "generate the item
   texture", "inventory icon", "dibujame un sprite", "haceme el pixel art de X", or when a code-generated sprite looks
