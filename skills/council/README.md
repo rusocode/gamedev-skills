@@ -153,6 +153,23 @@ Council trades recall for precision, on purpose. Know which side of that trade y
 - **It is an audit, not a review**, which is why it's worth running only occasionally — see
   [When to use it](#when-to-use-it).
 
+## Structure
+
+```
+council/
+├── SKILL.md                       # Instructions for the agent: process, verification rules, report template
+├── README.md                       # Installation and human-facing usage
+├── references/
+│   ├── roles.md                    # Roles, counterweights, and traps
+│   ├── reviewer-prompt.md          # Round 1 prompt and severity criteria
+│   └── cross-exam-prompt.md        # Round 2 prompt and cross-examination filter
+└── docs/
+    └── DESIGN-LOG.md               # Failure history and the rule derived from each case
+```
+
+`docs/DESIGN-LOG.md` is not read by the agent. It's there for whoever edits the skill next: each rule in `SKILL.md`
+exists because something failed in a test run, and the log says what.
+
 ## Similar projects
 
 - [Llicklair/consejo-7-sabios](https://github.com/Llicklair/consejo-7-sabios) is where Council's roles and its key
@@ -176,20 +193,3 @@ Council trades recall for precision, on purpose. Know which side of that trade y
   personas auto-selected from the content, several recorded rounds of debate, a judge to settle them, and its own
   verification and anti-groupthink gates, over code, plans and docs alike. Council is narrower by design, seven fixed
   roles you choose yourself, no debate, one counterweight reply per surviving finding, and one Markdown report.
-
-## Structure
-
-```
-council/
-├── SKILL.md                       # Instructions for the agent: process, verification rules, report template
-├── README.md                       # Installation and human-facing usage
-├── references/
-│   ├── roles.md                    # Roles, counterweights, and traps
-│   ├── reviewer-prompt.md          # Round 1 prompt and severity criteria
-│   └── cross-exam-prompt.md        # Round 2 prompt and cross-examination filter
-└── docs/
-    └── DESIGN-LOG.md               # Failure history and the rule derived from each case
-```
-
-`docs/DESIGN-LOG.md` is not read by the agent. It's there for whoever edits the skill next: each rule in `SKILL.md`
-exists because something failed in a test run, and the log says what.

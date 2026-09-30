@@ -17,6 +17,18 @@ the PNG, so you don't end up with flat or broken shapes.
 - Adding a color variant of a sprite
 - Syncing a sprite's map after editing the PNG by hand
 
+### [council](skills/council/)
+
+Audits one package with reviewers that have opposing incentives, then checks every complaint against the code before
+you see it. What you get is a short dated report, including the complaints that were thrown out and why.
+
+**Use when:**
+
+- Auditing a package you have reason to distrust
+- Working out what would break before you refactor
+- You want the findings verified, not just collected and ranked
+- A review keeps reporting problems that turn out not to exist
+
 ## Installation
 
 **One command, any agent.** The [skills](https://github.com/vercel-labs/skills) CLI
@@ -46,7 +58,14 @@ Describe what you need in plain language. The agent picks the right skill from y
 | "add a green variant of the potion"          | The same sprite in a different color                                |
 | "I edited sword.png by hand, update its map" | Its map synced with your edits, so later changes keep them          |
 
-You never type the skill's name. Mentioning "sprite", "texture", "item", or "icon" is enough for the agent to use it.
+You never type the skill's name for pixel art. Mentioning "sprite", "texture", "item", or "icon" is enough.
+
+**Council is the exception.** It only runs when you call it by name, because an audit reads a whole package and
+takes minutes, which is not something you want set off by a passing remark:
+
+```bash
+/council src/world/chunk
+```
 
 ## License
 
