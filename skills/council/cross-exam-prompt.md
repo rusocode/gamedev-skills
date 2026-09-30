@@ -11,14 +11,14 @@ nunca vuelve al rol que lo escribió.
 Después, el filtro: se cruza solo si el eje de ese contrapeso toca el cambio propuesto. Sin eso, el contrapeso
 no tiene nada que decir en su eje y llena el vacío inventando trabajo fuera de él.
 
-| Contrapeso | Se cruza si el cambio... | No se cruza si el cambio... |
-|---|---|---|
-| `guardian` (de optimizer) | quita un chequeo, agrega un cache, cambia el orden de operaciones, o mueve estado entre hilos | reemplaza una estructura o una API por otra de igual semántica |
-| `optimizer` (de guardian) | agrega trabajo en código que corre por tick o por frame | agrega una validación en código que corre una vez o por evento raro: el costo siempre da "negligible" |
-| `architect` (de simplifier y de ambassador) | borra una abstracción, fusiona clases, quita una capa, o cambia una firma pública | borra código muerto sin ningún llamador |
-| `simplifier` (de architect) | agrega una clase, una interfaz o una capa | mueve código que ya existe, sin agregar nada |
-| `conservative` (de modernizer) | migra una API, cambia un formato persistido, o toca algo con dependientes | usa una construcción del lenguaje en código interno sin dependientes |
-| `modernizer` (de conservative) | congela, duplica o envuelve algo para no tocar lo existente | agrega un test o documenta un invariante |
+| Contrapeso                                  | Se cruza si el cambio...                                                                      | No se cruza si el cambio...                                                                           |
+|---------------------------------------------|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `guardian` (de optimizer)                   | quita un chequeo, agrega un cache, cambia el orden de operaciones, o mueve estado entre hilos | reemplaza una estructura o una API por otra de igual semántica                                        |
+| `optimizer` (de guardian)                   | agrega trabajo en código que corre por tick o por frame                                       | agrega una validación en código que corre una vez o por evento raro: el costo siempre da "negligible" |
+| `architect` (de simplifier y de ambassador) | borra una abstracción, fusiona clases, quita una capa, o cambia una firma pública             | borra código muerto sin ningún llamador                                                               |
+| `simplifier` (de architect)                 | agrega una clase, una interfaz o una capa                                                     | mueve código que ya existe, sin agregar nada                                                          |
+| `conservative` (de modernizer)              | migra una API, cambia un formato persistido, o toca algo con dependientes                     | usa una construcción del lenguaje en código interno sin dependientes                                  |
+| `modernizer` (de conservative)              | congela, duplica o envuelve algo para no tocar lo existente                                   | agrega un test o documenta un invariante                                                              |
 
 Si ningún hallazgo pasa el filtro, se saltea el paso entero y el orquestador formula las objeciones como
 siempre (paso "Cruzar").

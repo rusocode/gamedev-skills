@@ -12,20 +12,20 @@ Una corrida completa (3 revisores + verificación + informe) promedió ~93k toke
 
 ## Fallos observados y su corrección
 
-| # | Fallo observado | Corrección aplicada |
-|---|---|---|
-| 1 | Sin skill: el orquestador ordenaba y deduplicaba hallazgos y lo llamaba "verificación"; los falsos quedaban arriba como CRÍTICO | Paso "Verificar": abrir el código citado, eslabón por eslabón del Camino |
-| 2 | "Race condition" en `writeAll()` que no existía: el único llamador nunca reutiliza el mapa | Cada eslabón cita código real, no un llamador hipotético |
-| 3 | Cifras inventadas ("cientos de MB", "-10% GC") sin ninguna cuenta | `reviewer-prompt.md`: cifras solo si se calculan desde el código, mostrando la cuenta |
-| 4 | "Carga 100 veces por segundo" ignorando el `return` temprano de `Overworld.java:134` | Eslabón "Frecuencia": comprobar returns tempranos y caches entre el disparador y el código |
-| 5 | "Si `onEvict()`/`writeChunks()` lanzan..." cuando esas llamadas solo encolan una tarea: la excepción real ocurre en el hilo trabajador | Eslabón "Excepción": la línea que la lanza corre en el mismo hilo que la recibe |
-| 6 | Severidad ALTA por un crash que solo pasa con el archivo de guardado corrupto o editado a mano (el juego nunca lo escribe así) | Eslabón "Origen": si el estado inicial solo viene de afuera del programa, la severidad máxima es media |
-| 7 | Guardian descartó la concurrencia porque "todo corre en el hilo de tick", ignorando el hilo de escritura que vive en otro paquete | `roles.md`: guardian también busca objetos que cruzan a un hilo que vive fuera del alcance |
-| 8 | El orquestador escribió el informe citando 3 revisores cuando solo había vuelto 1 | Paso "Esperar a todos"; el informe arranca con "Revisores: rol (n hallazgos), ..." |
-| 9 | Refutó el bug real de `destroyedDecoratives` con una razón que cubre una sola rama (`Set.of()` en el caso vacío) e ignora la otra (`HashSet` vivo cuando el chunk sí tiene entrada) | "Refutar exige la misma evidencia que confirmar": si el eslabón tiene ramas, hay que cubrirlas todas |
-| 10 | Confirmó como "media" algo que el propio revisor planteaba como hipotético ("si una lista se modificara... aunque hoy se pasan snapshots") | Un eslabón condicional sin código actual que lo produzca va a Refutados |
-| 11 | Faltaba forzar la evidencia mínima de un confirmado | Plantilla: campos obligatorios "Disparador" y "Estado final" |
-| 12 | Un subagente dejó un archivo vacío (`eldest)`) en el repo durante una revisión "de solo lectura" | Paso "Controlar efectos": comparar `git status --porcelain` antes y después |
+| #  | Fallo observado                                                                                                                                                                     | Corrección aplicada                                                                                    |
+|----|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| 1  | Sin skill: el orquestador ordenaba y deduplicaba hallazgos y lo llamaba "verificación"; los falsos quedaban arriba como CRÍTICO                                                     | Paso "Verificar": abrir el código citado, eslabón por eslabón del Camino                               |
+| 2  | "Race condition" en `writeAll()` que no existía: el único llamador nunca reutiliza el mapa                                                                                          | Cada eslabón cita código real, no un llamador hipotético                                               |
+| 3  | Cifras inventadas ("cientos de MB", "-10% GC") sin ninguna cuenta                                                                                                                   | `reviewer-prompt.md`: cifras solo si se calculan desde el código, mostrando la cuenta                  |
+| 4  | "Carga 100 veces por segundo" ignorando el `return` temprano de `Overworld.java:134`                                                                                                | Eslabón "Frecuencia": comprobar returns tempranos y caches entre el disparador y el código             |
+| 5  | "Si `onEvict()`/`writeChunks()` lanzan..." cuando esas llamadas solo encolan una tarea: la excepción real ocurre en el hilo trabajador                                              | Eslabón "Excepción": la línea que la lanza corre en el mismo hilo que la recibe                        |
+| 6  | Severidad ALTA por un crash que solo pasa con el archivo de guardado corrupto o editado a mano (el juego nunca lo escribe así)                                                      | Eslabón "Origen": si el estado inicial solo viene de afuera del programa, la severidad máxima es media |
+| 7  | Guardian descartó la concurrencia porque "todo corre en el hilo de tick", ignorando el hilo de escritura que vive en otro paquete                                                   | `roles.md`: guardian también busca objetos que cruzan a un hilo que vive fuera del alcance             |
+| 8  | El orquestador escribió el informe citando 3 revisores cuando solo había vuelto 1                                                                                                   | Paso "Esperar a todos"; el informe arranca con "Revisores: rol (n hallazgos), ..."                     |
+| 9  | Refutó el bug real de `destroyedDecoratives` con una razón que cubre una sola rama (`Set.of()` en el caso vacío) e ignora la otra (`HashSet` vivo cuando el chunk sí tiene entrada) | "Refutar exige la misma evidencia que confirmar": si el eslabón tiene ramas, hay que cubrirlas todas   |
+| 10 | Confirmó como "media" algo que el propio revisor planteaba como hipotético ("si una lista se modificara... aunque hoy se pasan snapshots")                                          | Un eslabón condicional sin código actual que lo produzca va a Refutados                                |
+| 11 | Faltaba forzar la evidencia mínima de un confirmado                                                                                                                                 | Plantilla: campos obligatorios "Disparador" y "Estado final"                                           |
+| 12 | Un subagente dejó un archivo vacío (`eldest)`) en el repo durante una revisión "de solo lectura"                                                                                    | Paso "Controlar efectos": comparar `git status --porcelain` antes y después                            |
 
 ## Nunca detectado en 9 corridas
 
@@ -40,10 +40,10 @@ Antes de implementarlo se corrió un micro-test de 2 agentes sobre hallazgos ya 
 anteriores, comparando la objeción de un contrapeso real contra la que el orquestador se había formulado solo.
 El resultado fue asimétrico:
 
-| Cruce | Objeción autoformulada | Objeción del contrapeso real | Veredicto |
-|---|---|---|---|
-| Guardian evalúa "agrupar escrituras en `Overworld.unloadAll()`" (de optimizer) | "evento raro, el ahorro no justifica la complejidad" | `Overworld.java:381-396` mezcla limpieza en memoria con persistencia: saltear `onEvict()` para agrupar deja `mobsResolved` y `pendingMobRecords` sin limpiar, y el javadoc de 386-387 dice que sus entradas quedarían "huerfanas para siempre". La propuesta no se puede aplicar sin refactorizar antes | **Positivo**: obstáculo real y verificado que el orquestador no había visto |
-| Optimizer evalúa "validar offsets en `RegionFileManager.java:141`" (de guardian) | "una comparación por entrada (negligible)" | "Costo: negligible (O(1))" — la misma conclusión. Además eligió ENMIENDA y pidió más validaciones (eje de guardian), afirmando que con `data.length < TABLE_BYTES` la línea 137 "crea un buffer mal formado" y se "leerá basura": falso, `ByteBuffer.wrap` lanza `IndexOutOfBoundsException` ahí mismo | **Negativo**: nada nuevo en su eje, deriva de rol y una premisa falsa |
+| Cruce                                                                            | Objeción autoformulada                               | Objeción del contrapeso real                                                                                                                                                                                                                                                                            | Veredicto                                                                   |
+|----------------------------------------------------------------------------------|------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| Guardian evalúa "agrupar escrituras en `Overworld.unloadAll()`" (de optimizer)   | "evento raro, el ahorro no justifica la complejidad" | `Overworld.java:381-396` mezcla limpieza en memoria con persistencia: saltear `onEvict()` para agrupar deja `mobsResolved` y `pendingMobRecords` sin limpiar, y el javadoc de 386-387 dice que sus entradas quedarían "huerfanas para siempre". La propuesta no se puede aplicar sin refactorizar antes | **Positivo**: obstáculo real y verificado que el orquestador no había visto |
+| Optimizer evalúa "validar offsets en `RegionFileManager.java:141`" (de guardian) | "una comparación por entrada (negligible)"           | "Costo: negligible (O(1))" — la misma conclusión. Además eligió ENMIENDA y pidió más validaciones (eje de guardian), afirmando que con `data.length < TABLE_BYTES` la línea 137 "crea un buffer mal formado" y se "leerá basura": falso, `ByteBuffer.wrap` lanza `IndexOutOfBoundsException` ahí mismo  | **Negativo**: nada nuevo en su eje, deriva de rol y una premisa falsa       |
 
 La asimetría es estructural. "¿Qué rompe este cambio?" es el trabajo del guardian, así que critica bien. "¿Cuánto
 cuesta esta validación?" casi siempre da "negligible", así que el optimizer no tiene nada real que decir en su
@@ -51,8 +51,8 @@ eje y llena el vacío con trabajo ajeno. De ahí las tres decisiones de diseño:
 
 1. **Filtro previo** (tabla en `cross-exam-prompt.md`): se cruza solo si el eje del contrapeso toca el cambio.
    Validaciones en código que corre una vez, renombres y borrados de código muerto quedan excluidos.
-2. **AVALA presentado como la respuesta esperada**, explícitamente no un fracaso. No se usó una prohibición
-   ("no te salgas de tu rol") porque `writing-skills` documenta que las prohibiciones se negocian bajo incentivo
+2. **AVALA presentado como la respuesta esperada**, explícitamente no un fracaso. No se usó una prohibición ("no te
+   salgas de tu rol") porque `writing-skills` documenta que las prohibiciones se negocian bajo incentivo
    contrario; una expectativa positiva no deja nada que negociar.
 3. **Las respuestas del examen cruzado se verifican** con las mismas reglas que los hallazgos de la ronda 1. Sin
    eso, el reclamo falso sobre `ByteBuffer.wrap` habría entrado al informe.
@@ -88,7 +88,7 @@ La corrida de validación sobre `io/chunk` fue la mejor de las 11 y la primera c
 - El examen cruzado corrió, eligió bien el destino y los tres veredictos aparecieron: `architect` **AVALÓ** un
   cambio de firma, `guardian` **ENMENDÓ** el agrupado de escrituras citando la invariante documentada de
   `RegionWriteQueue` (el mismo obstáculo del micro-test, reproducido), y `optimizer` **OBJETÓ** la copia
-  defensiva en `writeAll()` por costo O(n) sin riesgo actual.
+  defensiva en `writeAll()` por costo O (n) sin riesgo actual.
 - Esa última objeción importa: **es el hallazgo falso que el orquestador había confirmado como real en corridas
   anteriores** (fallo #10). El examen cruzado lo frenó por sí solo, sin intervención.
 - Tres hallazgos quedaron afuera del filtro con el motivo anotado. Los tres de severidad baja se verificaron
