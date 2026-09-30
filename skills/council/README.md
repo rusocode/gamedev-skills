@@ -6,14 +6,6 @@ code before it reaches you. What you get back is short and true, not long and pa
 An AI review is easy to inflate, ask for problems and you get problems, whether or not they exist. **Council's main
 job is not collecting findings, it's refuting them.**
 
-## Installation
-
-```bash
-npx skills add rusocode/gamedev-skills --skill council
-```
-
-## Roles
-
 Each role defends one thing, is priced by one counterweight, and has one trap it tends to fall into. The table
 below covers the first two; [roles.md](roles.md) has all three, plus what each role goes looking for.
 
@@ -29,6 +21,22 @@ below covers the first two; [roles.md](roles.md) has all three, plus what each r
 
 **The four untested roles were written but never run against real code. The skill flags them as untested in the
 report header, so a finding from one of them is a suggestion, not a measurement.**
+
+## Installation
+
+```bash
+npx skills add rusocode/gamedev-skills --skill council
+```
+
+## Recommended model
+
+**Use the best model you have.** Most of the run is the skill checking complaints and throwing out the ones that
+don't hold up, and that step is pure judgment. A weaker model does the cheap version of it, which is sorting the
+complaints and calling that verification. Preventing exactly that is the reason the skill exists.
+
+If your agent can hand subagents a different model, the reviewers are the safe place to spend less, since their
+mistakes are what the checking step is there to catch. Don't take them to the cheapest tier, though. A noisier
+reviewer saves you nothing, it just moves work onto the step that costs the most.
 
 ## Usage
 
@@ -58,16 +66,6 @@ look for still reads the whole package, and then invents something to justify th
 | Something you're about to change | `guardian, conservative`   |
 | A public API others depend on    | `ambassador, conservative` |
 
-### Recommended model
-
-**Use the best model you have.** Most of the run is the skill checking complaints and throwing out the ones that
-don't hold up, and that step is pure judgment. A weaker model does the cheap version of it, which is sorting the
-complaints and calling that verification. Preventing exactly that is the reason the skill exists.
-
-If your agent can hand subagents a different model, the reviewers are the safe place to spend less, since their
-mistakes are what the checking step is there to catch. Don't take them to the cheapest tier, though. A noisier
-reviewer saves you nothing, it just moves work onto the step that costs the most.
-
 ### When to use it!
 
 > [!IMPORTANT]
@@ -84,7 +82,7 @@ Most of what it costs goes into verifying findings. On code with no threads, no 
 formats, most roles have nothing to bite on, and you pay for reviewers that read the whole package to report
 nothing.
 
-## How it works, in simple terms
+## How it works
 
 1. **It calls in a panel.** One reviewer per role, all reading your code at the same time, each one told to care
    about a single thing and ignore the rest. They work apart and never see each other's notes, so nobody agrees
