@@ -5,13 +5,9 @@ the PNG, so you don't end up with flat or broken shapes.
 
 <p align="center"><img src="assets/example.png" width="560"></p>
 
-## Requirements
-
-- [Node.js](https://nodejs.org/en/download), to install the skill with the
-  [`skills`](https://github.com/vercel-labs/skills) CLI
-- [Python 3](https://www.python.org/downloads/), to run the skill's scripts
-
 ## Installation
+
+_[Python 3](https://www.python.org/downloads/) to run the skill's scripts is required._
 
 ```bash
 # Install the skill
@@ -20,17 +16,6 @@ npx skills add rusocode/gamedev-skills --skill drawing-pixel-art
 # Install Pillow, the image library the skill's scripts use
 pip install pillow
 ```
-
-## How it works
-
-1. The agent writes the sprite as a **map**: a text grid where each character is one pixel of one color.
-2. The [`pixelmap.py`](scripts/pixelmap.py) script turns the map into a PNG and checks its size, outline,
-   holes (like the inside of a ring), symmetry, framing, and shading. If a check fails, the agent fixes the map
-   before showing you anything.
-3. The agent reviews an **8x enlarged preview** to confirm that every key feature is visible, and you get the PNG with
-   that preview, in a drafts folder away from your game's assets.
-4. **Nothing enters your project until you approve it.** Then the PNG goes to your textures folder, and its map joins
-   the skill's library of approved sprites, so similar sprites don't start from scratch.
 
 ## Recommended model
 
@@ -80,6 +65,17 @@ the skill detects those on its own. Do explain when the problem is the drawing i
 - "the silhouette is wrong, don't use it as a reference"
 - "the pose is off"
 - "the coins look like cookies"
+
+## How it works
+
+1. The agent writes the sprite as a **map**: a text grid where each character is one pixel of one color.
+2. The [`pixelmap.py`](scripts/pixelmap.py) script turns the map into a PNG and checks its size, outline,
+   holes (like the inside of a ring), symmetry, framing, and shading. If a check fails, the agent fixes the map
+   before showing you anything.
+3. The agent reviews an **8x enlarged preview** to confirm that every key feature is visible, and you get the PNG with
+   that preview, in a drafts folder away from your game's assets.
+4. **Nothing enters your project until you approve it.** Then the PNG goes to your textures folder, and its map joins
+   the skill's library of approved sprites, so similar sprites don't start from scratch.
 
 ## Structure
 
