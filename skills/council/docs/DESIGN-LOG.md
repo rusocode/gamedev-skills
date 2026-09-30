@@ -16,11 +16,11 @@ Una corrida completa (3 revisores + verificación + informe) promedió ~93k toke
 |----|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
 | 1  | Sin skill: el orquestador ordenaba y deduplicaba hallazgos y lo llamaba "verificación"; los falsos quedaban arriba como CRÍTICO                                                     | Paso "Verificar": abrir el código citado, eslabón por eslabón del Camino                               |
 | 2  | "Race condition" en `writeAll()` que no existía: el único llamador nunca reutiliza el mapa                                                                                          | Cada eslabón cita código real, no un llamador hipotético                                               |
-| 3  | Cifras inventadas ("cientos de MB", "-10% GC") sin ninguna cuenta                                                                                                                   | `reviewer-prompt.md`: cifras solo si se calculan desde el código, mostrando la cuenta                  |
+| 3  | Cifras inventadas ("cientos de MB", "-10% GC") sin ninguna cuenta                                                                                                                   | `../references/reviewer-prompt.md`: cifras solo si se calculan desde el código, mostrando la cuenta    |
 | 4  | "Carga 100 veces por segundo" ignorando el `return` temprano de `Overworld.java:134`                                                                                                | Eslabón "Frecuencia": comprobar returns tempranos y caches entre el disparador y el código             |
 | 5  | "Si `onEvict()`/`writeChunks()` lanzan..." cuando esas llamadas solo encolan una tarea: la excepción real ocurre en el hilo trabajador                                              | Eslabón "Excepción": la línea que la lanza corre en el mismo hilo que la recibe                        |
 | 6  | Severidad ALTA por un crash que solo pasa con el archivo de guardado corrupto o editado a mano (el juego nunca lo escribe así)                                                      | Eslabón "Origen": si el estado inicial solo viene de afuera del programa, la severidad máxima es media |
-| 7  | Guardian descartó la concurrencia porque "todo corre en el hilo de tick", ignorando el hilo de escritura que vive en otro paquete                                                   | `roles.md`: guardian también busca objetos que cruzan a un hilo que vive fuera del alcance             |
+| 7  | Guardian descartó la concurrencia porque "todo corre en el hilo de tick", ignorando el hilo de escritura que vive en otro paquete                                                   | `../references/roles.md`: guardian también busca objetos que cruzan a un hilo que vive fuera del alcance |
 | 8  | El orquestador escribió el informe citando 3 revisores cuando solo había vuelto 1                                                                                                   | Paso "Esperar a todos"; el informe arranca con "Revisores: rol (n hallazgos), ..."                     |
 | 9  | Refutó el bug real de `destroyedDecoratives` con una razón que cubre una sola rama (`Set.of()` en el caso vacío) e ignora la otra (`HashSet` vivo cuando el chunk sí tiene entrada) | "Refutar exige la misma evidencia que confirmar": si el eslabón tiene ramas, hay que cubrirlas todas   |
 | 10 | Confirmó como "media" algo que el propio revisor planteaba como hipotético ("si una lista se modificara... aunque hoy se pasan snapshots")                                          | Un eslabón condicional sin código actual que lo produzca va a Refutados                                |
@@ -49,7 +49,7 @@ La asimetría es estructural. "¿Qué rompe este cambio?" es el trabajo del guar
 cuesta esta validación?" casi siempre da "negligible", así que el optimizer no tiene nada real que decir en su
 eje y llena el vacío con trabajo ajeno. De ahí las tres decisiones de diseño:
 
-1. **Filtro previo** (tabla en `cross-exam-prompt.md`): se cruza solo si el eje del contrapeso toca el cambio.
+1. **Filtro previo** (tabla en `../references/cross-exam-prompt.md`): se cruza solo si el eje del contrapeso toca el cambio.
    Validaciones en código que corre una vez, renombres y borrados de código muerto quedan excluidos.
 2. **AVALA presentado como la respuesta esperada**, explícitamente no un fracaso. No se usó una prohibición ("no te
    salgas de tu rol") porque `writing-skills` documenta que las prohibiciones se negocian bajo incentivo
@@ -67,7 +67,7 @@ Una revisión de los cuatro archivos encontró seis problemas, corregidos todos:
 
 1. **El examen cruzado podía devolverle un hallazgo a quien lo propuso.** La tabla decidía el destino por tipo de
    cambio, así que una propuesta de guardian que "cambia el orden de operaciones" volvía a guardian; y no cubría
-   a conservative, modernizer ni ambassador. Ahora el destino es una sola regla — el contrapeso de `roles.md` — y
+   a conservative, modernizer ni ambassador. Ahora el destino es una sola regla — el contrapeso de `../references/roles.md` — y
    la tabla es solo el filtro de eje, con una fila por cada uno de los seis contrapesos.
 2. **Se lanzaba un rol sin probar sin avisar.** Con los roles por defecto, el contrapeso de `simplifier` es
    `architect`, que nunca se probó. El aviso de "sin probar" ahora cubre también los roles del paso 6.

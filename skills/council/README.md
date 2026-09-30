@@ -1,13 +1,13 @@
 # Council
 
-Audits a file or directory with [roles](roles.md) that have opposing incentives, then verifies every finding against the
+Audits a file or directory with [roles](references/roles.md) that have opposing incentives, then verifies every finding against the
 code before it reaches you. What you get back is short and true, not long and padded.
 
 An AI review is easy to inflate, ask for problems and you get problems, whether or not they exist. **Council's main
 job is not collecting findings, it's refuting them.**
 
 Each role defends one thing, is priced by one counterweight, and has one trap it tends to fall into. The table
-below covers the first two; [roles.md](roles.md) has all three, plus what each role goes looking for.
+below covers the first two; [roles.md](references/roles.md) has all three, plus what each role goes looking for.
 
 | Role           | Defends                                        | Counterweight  | Tested |
 |----------------|------------------------------------------------|----------------|--------|
@@ -157,12 +157,15 @@ Council trades recall for precision, on purpose. Know which side of that trade y
 
 ```
 council/
-├── SKILL.md              # Instructions for the agent: the process, the verification rules, the report template
-├── roles.md              # The seven roles: what each defends, its counterweight, and its trap
-├── reviewer-prompt.md    # Round 1 prompt: the finding formats and the severity criteria
-├── cross-exam-prompt.md  # Round 2 prompt: who reviews whom, and the filter for when it's worth it
-└── DESIGN-LOG.md         # Every failure observed in testing and the rule that corrects it
+├── SKILL.md                       # Instructions for the agent: process, verification rules, report template
+├── README.md                       # Installation and human-facing usage
+├── references/
+│   ├── roles.md                    # Roles, counterweights, and traps
+│   ├── reviewer-prompt.md          # Round 1 prompt and severity criteria
+│   └── cross-exam-prompt.md        # Round 2 prompt and cross-examination filter
+└── docs/
+    └── DESIGN-LOG.md               # Failure history and the rule derived from each case
 ```
 
-`DESIGN-LOG.md` is not read by the agent. It's there for whoever edits the skill next: each rule in `SKILL.md`
+`docs/DESIGN-LOG.md` is not read by the agent. It's there for whoever edits the skill next: each rule in `SKILL.md`
 exists because something failed in a test run, and the log says what.

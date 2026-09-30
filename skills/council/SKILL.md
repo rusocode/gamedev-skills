@@ -21,7 +21,7 @@ central de esta skill es verificar, no recolectar.
 
 - Sin ruta: preguntala y pará.
 - Roles: lista separada por comas, o `all`. Por defecto `simplifier, guardian, optimizer`.
-- Las definiciones están en `roles.md`, en el mismo directorio que este archivo. Si piden un rol que no está
+- Las definiciones están en `references/roles.md`. Si piden un rol que no está
   ahí, listá los válidos y pará.
 - `simplifier`, `guardian` y `optimizer` pasaron varias rondas de prueba contra código real; `architect`,
   `conservative`, `modernizer` y `ambassador` no. Marcalos como "sin probar" en el encabezado del informe si
@@ -37,7 +37,7 @@ central de esta skill es verificar, no recolectar.
       revisor le llegan esas rutas, no un resumen tuyo.
     - Si es repo git, guardá la salida de `git status --porcelain` como foto inicial.
 2. **Lanzar.** Un `Agent` (`subagent_type: general-purpose`) por rol, todos en un mismo mensaje. El prompt es
-   `reviewer-prompt.md` completado. Pasá rutas, no código pegado: el revisor tiene que poder buscar llamadores
+   `references/reviewer-prompt.md` completado. Pasá rutas, no código pegado: el revisor tiene que poder buscar llamadores
    fuera del alcance.
 3. **Esperar a todos.** Los pasos siguientes necesitan la respuesta de cada revisor. Si el entorno corre los
    agentes en segundo plano, seguí esperando sus notificaciones: el informe se escribe recién cuando volvió el
@@ -87,8 +87,8 @@ central de esta skill es verificar, no recolectar.
    presente, un caso vacío y uno lleno), la refutación tiene que cubrirlas todas.
     - Si el razonamiento es falso pero señala estado mutable o compartido real, seguí ese estado hasta quienes lo
       escriben y lo leen: ahí suele estar el bug que el revisor rodeó sin ver.
-    - La severidad final la asignás vos con los criterios de `reviewer-prompt.md`; la del revisor no cuenta.
-6. **Examen cruzado**, solo con los confirmados y solo con los que pasen el filtro de `cross-exam-prompt.md`
+    - La severidad final la asignás vos con los criterios de `references/reviewer-prompt.md`; la del revisor no cuenta.
+6. **Examen cruzado**, solo con los confirmados y solo con los que pasen el filtro de `references/cross-exam-prompt.md`
    (ese archivo dice a qué rol va cada hallazgo y cuándo vale la pena cruzarlo). Un agente por rol contrapeso,
    con todos los hallazgos que le tocan juntos en un prompt. Valen los pasos 2, 3 y 4 igual que en la ronda 1:
    mismo tipo de agente, esperá a que vuelvan todos, y volvé a comparar `git status --porcelain`. Verificá sus
