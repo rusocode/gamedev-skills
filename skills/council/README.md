@@ -1,7 +1,7 @@
 # Council
 
-Audits a file or directory with [roles](references/roles.md) that have opposing incentives, then verifies every finding against the
-code before it reaches you. What you get back is short and true, not long and padded.
+Audits a file or directory with [roles](references/roles.md) that have opposing incentives, then verifies every
+finding against the code before it reaches you. What you get back is short and true, not long and padded.
 
 An AI review is easy to inflate, ask for problems and you get problems, whether or not they exist. **Council's main
 job is not collecting findings, it's refuting them.**
@@ -152,6 +152,30 @@ Council trades recall for precision, on purpose. Know which side of that trade y
   in the skill fixes that.
 - **It is an audit, not a review**, which is why it's worth running only occasionally — see
   [When to use it](#when-to-use-it).
+
+## Similar projects
+
+- [Llicklair/consejo-7-sabios](https://github.com/Llicklair/consejo-7-sabios) is where Council's roles and its key
+  claim rule come from. A Python CLI that debates a whole project question with the same seven sages and the same
+  counterweights, reaches consensus, has a judge synthesize a plan, and can execute it on an isolated branch. Its
+  verifier enforces in Python what Council can only ask for in Markdown, that a refuted key claim kills the finding
+  outright. Council keeps the roles, drops the debate and the execution, and points them at one path of code.
+- [addyosmani/adverse](https://github.com/addyosmani/adverse) combines three reviewer perspectives with a cross-review
+  round. It also ships as a CLI and can review diffs or run in CI. Council is a lighter, explicitly invoked audit
+  focused on tracing and verifying each claim against the code, then saving a dated report.
+- [alecnielsen/adversarial-review](https://github.com/alecnielsen/adversarial-review), which despite the shared name
+  has nothing to do with the entry below it, is a bash script that pits Claude against GPT Codex over a whole
+  directory, four phases a round and up to three rounds, then applies the fixes both models agreed on. Its
+  independence is the real thing, two vendors rather than one model wearing different hats. Council gets its friction
+  from opposing incentives instead, and treats agreement as a claim still to be checked, not as confidence.
+- [ng/adversarial-review](https://github.com/ng/adversarial-review) reviews branches and pull requests with multiple
+  agents, mechanical checks, optional cross-model review, and a bounded fix-and-verify loop. Council does not modify
+  code or manage PR feedback; it focuses on role-based review of a chosen path and a transparent report of confirmed,
+  doubtful, and refuted findings.
+- [wan-huiyan/agent-review-panel](https://github.com/wan-huiyan/agent-review-panel) is the largest of these: 4-6
+  personas auto-selected from the content, several recorded rounds of debate, a judge to settle them, and its own
+  verification and anti-groupthink gates, over code, plans and docs alike. Council is narrower by design, seven fixed
+  roles you choose yourself, no debate, one counterweight reply per surviving finding, and one Markdown report.
 
 ## Structure
 
