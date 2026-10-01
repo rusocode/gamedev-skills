@@ -4,14 +4,14 @@
 
 Cuestionario de práctica individual para el usuario, que lo responderá personalmente para comprobar su comprensión de la skill Council.
 
-## Diseño aprobado
+## Diseño propuesto para revisión
 
 - Interfaz y contenido en español.
 - 10 preguntas de opción múltiple, con cuatro opciones seleccionables por pregunta.
-- Las 10 preguntas aparecen en una sola pantalla.
-- El usuario puede seleccionar una respuesta por pregunta y revisar/cambiar sus selecciones antes de finalizar.
-- Al finalizar, se muestra el puntaje total sobre 10, la respuesta elegida, la respuesta correcta y una explicación breve para cada pregunta.
-- El contenido de cada pregunta y su explicación debe derivarse de la skill Council real, en particular `SKILL.md` y el `README.md` accesibles en este repositorio.
+- Cada pregunta aparece en su propia pantalla. El usuario avanza y puede volver a una pregunta anterior para cambiar su respuesta.
+- Si el usuario selecciona una respuesta incorrecta, esa pantalla muestra de inmediato por qué la opción elegida es incorrecta, con una explicación basada en la skill. La retroalimentación aclara el concepto sin adelantar la letra u opción correcta.
+- Al finalizar, se muestra el puntaje total sobre 10 y, para cada pregunta, la respuesta elegida, la respuesta correcta y una explicación breve.
+- El contenido de cada pregunta y sus explicaciones se deriva de la skill Council real, en particular `SKILL.md` y el `README.md` accesibles en este repositorio.
 
 ## Cobertura del contenido
 
@@ -22,8 +22,10 @@ Las respuestas correctas y las explicaciones se comprobarán contra la fuente an
 ## Flujo
 
 1. El usuario lee las instrucciones breves del cuestionario.
-2. Responde las 10 preguntas en la misma pantalla, eligiendo una de cuatro opciones en cada una.
-3. Al finalizar, recibe el puntaje y la corrección explicada de las 10 preguntas.
+2. Responde una pregunta por pantalla, eligiendo una de cuatro opciones.
+3. Si elige una opción incorrecta, recibe una explicación inmediata del error basada en la fuente.
+4. Puede avanzar o volver a preguntas anteriores para revisar sus elecciones.
+5. Al finalizar, recibe el puntaje y la corrección explicada de las 10 preguntas.
 
 ## Límites
 
@@ -34,7 +36,7 @@ Las respuestas correctas y las explicaciones se comprobarán contra la fuente an
 ## Criterios de aceptación
 
 - Hay exactamente 10 preguntas y exactamente cuatro opciones seleccionables por pregunta.
-- Toda la experiencia está en español y presenta las 10 preguntas en una sola pantalla.
-- El usuario puede elegir y cambiar una respuesta en cada pregunta antes de finalizar.
+- Toda la experiencia está en español y cada pregunta ocupa una pantalla separada.
+- El usuario puede elegir una respuesta, avanzar y volver a cambiarla antes de finalizar.
+- Después de elegir una respuesta incorrecta, se explica inmediatamente por qué esa opción es incorrecta, sin revelar directamente cuál opción es la correcta.
 - El resultado final muestra el puntaje sobre 10 y, para cada pregunta, la opción elegida, la correcta y una explicación basada en la fuente real.
-- La respuesta correcta no se revela antes de finalizar.
