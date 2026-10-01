@@ -1,58 +1,59 @@
-# Prompt del revisor
+# Reviewer prompt
 
-Completá los `<...>` y enviá el bloque como prompt del subagente.
+Fill in the `<...>` and send the block as the subagent's prompt.
 
 ```
-Sos el revisor <Rol> en una revisión de código con roles de incentivos opuestos. Otros revisores cubren las
-demás perspectivas en paralelo.
+You are the <Role> reviewer in a code review with roles of opposing incentives. Other reviewers cover the
+remaining perspectives in parallel.
 
-<definición del rol, copiada de roles.md>
+<role definition, copied from roles.md>
 
-Alcance: <ruta>
-<lista de archivos con sus líneas>
+Scope: <path>
+<list of files with their line counts>
 
-Leé antes de revisar: <rutas del archivo de instrucciones del proyecto y de los documentos que exige, o "ninguno">
+Read before reviewing: <paths of the project instruction file and the documents it requires, or "none">
 
-Tu trabajo es de solo lectura: no crees, edites ni borres archivos, y no corras comandos que escriban en disco o
-en git (tampoco redirecciones con `>`). Leé completos los archivos del alcance. Cuando un hallazgo dependa de
-cómo se usa el código, buscá los llamadores en todo el repo.
+Your work is read-only: do not create, edit or delete files, and do not run commands that write to disk or to
+git (no `>` redirections either). Read the files in scope in full. When a finding depends on how the code is
+used, search for the callers across the whole repo.
 
-Devolvé entre 0 y 5 hallazgos. Hay dos formas, según lo que reportes.
+Return between 0 and 5 findings. There are two shapes, depending on what you report.
 
-**Defecto** — algo se rompe, se corrompe o cuesta de más:
+**Defect** — something breaks, gets corrupted, or costs more than it should:
 
-### <título>
-- Ubicación: <archivo>:<líneas>
-- Camino: la cadena real que lleva al problema, desde un llamador que existe hoy
-  (<archivo>:<línea> → ... → consecuencia). Si ningún llamador actual lo dispara, el ítem va a "Descartado".
-  Si un eslabón es una excepción, citá la línea que la lanza y el hilo en que corre. Si el camino arranca en un
-  dato o estado anómalo, citá el código que hoy lo produce, o escribí "origen externo".
-- Frecuencia: cuántas veces corre este código (una vez al cargar / por evento / por tick / por frame),
-  contando los returns tempranos y caches que haya entre el disparador y este código
-- Severidad: alta | media | baja
-- Propuesta: el cambio concreto
-- Costo: lo que objetaría <contrapeso>
+### <title>
+- Location: <file>:<lines>
+- Path: the real chain that leads to the problem, starting from a caller that exists today
+  (<file>:<line> → ... → consequence). If no current caller triggers it, the item goes to "Discarded".
+  If a link is an exception, cite the line that throws it and the thread it runs on. If the path starts from
+  anomalous data or state, cite the code that produces it today, or write "external origin".
+- Frequency: how many times this code runs (once at load / per event / per tick / per frame), accounting for
+  early returns and caches between the trigger and this code
+- Severity: high | medium | low
+- Proposal: the concrete change
+- Cost: what <counterweight> would object to
 
-**Mantenimiento** — código que sobra, un nombre que miente, un límite mal puesto; hoy nada se rompe:
+**Maintenance** — code that is surplus, a name that lies, a limit set wrong; nothing breaks today:
 
-### <título>
-- Ubicación: <archivo>:<líneas>
-- Evidencia: qué comprobaste y cómo. Para código muerto, qué búsquedas hiciste y qué no apareció (incluida la
-  del nombre como string: reflexión, inyección de dependencias, JSON, configuración). Para un nombre o una
-  firma, el uso incorrecto concreto que habilita. Para un límite, el cambio futuro que se complica.
-- Severidad: media | baja
-- Propuesta: el cambio concreto
-- Costo: lo que objetaría <contrapeso>
+### <title>
+- Location: <file>:<lines>
+- Evidence: what you checked and how. For dead code, which searches you ran and what didn't turn up (including
+  the name as a string: reflection, dependency injection, JSON, configuration). For a name or a signature, the
+  concrete misuse it enables. For a limit, the future change it complicates.
+- Severity: medium | low
+- Proposal: the concrete change
+- Cost: what <counterweight> would object to
 
-Criterios de severidad:
-- alta: el camino existe hoy y produce pérdida o corrupción de datos, un crash o un bug visible.
-- media: el camino existe y el impacto es acotado, o el costo cae en código que corre por tick o por frame.
-- baja: mejora de mantenimiento, o costo en código que corre una vez o ante un evento raro.
-- Con origen externo (un archivo dañado o editado a mano, que el programa nunca escribe así), el máximo es media.
-- Un hallazgo de mantenimiento nunca es alta: nada está roto todavía.
+Severity criteria:
+- high: the path exists today and produces data loss or corruption, a crash, or a visible bug.
+- medium: the path exists and the impact is bounded, or the cost falls on code that runs per tick or per frame.
+- low: a maintenance improvement, or cost in code that runs once or on a rare event.
+- With an external origin (a damaged or hand-edited file that the program never writes that way), the maximum
+  is medium.
+- A maintenance finding is never high: nothing is broken yet.
 
-Cifras de memoria, tiempo o cantidad de llamadas: solo si las calculaste desde el código, mostrando la cuenta.
+Figures for memory, time or call counts: only if you computed them from the code, showing the arithmetic.
 
-Al final, una sección "Descartado" con una línea por cada cosa que miraste y no reportaste, y el motivo
-(decisión documentada, sin llamador, fuera de tu rol).
+At the end, a "Discarded" section with one line for each thing you looked at and did not report, and the reason
+(documented decision, no caller, outside your role).
 ```

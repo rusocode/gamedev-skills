@@ -1,148 +1,148 @@
-# Historial de diseño de `/council`
+# Design history of `/council`
 
-No lo lee el agente que ejecuta la skill (no está referenciado desde `SKILL.md`). Es registro para quien la
-edite después: qué falló en cada corrida de prueba y qué regla lo corrige. Sirve para no reintroducir un fallo
-ya visto y para juzgar si una mejora nueva vale lo que cuesta.
+The agent running the skill does not read this file (it is not referenced from `SKILL.md`). It is a record for
+whoever edits the skill next: what failed in each test run and which rule corrects it. It exists so a failure
+already seen is not reintroduced, and so a new improvement can be weighed against what it costs.
 
-## Metodología
+## Methodology
 
-`superpowers:writing-skills` (RED sin skill → GREEN con skill → REFACTOR repetido). 9 corridas de subagente
-sobre dos paquetes Java reales (`world/chunk`, `io/chunk`), más 2 agentes de micro-test para el examen cruzado.
-Una corrida completa (3 revisores + verificación + informe) promedió ~93k tokens, con un rango de 77k a 109k.
+`superpowers:writing-skills` (RED without the skill → GREEN with it → REFACTOR, repeated). 9 subagent runs over
+two real Java packages (`world/chunk`, `io/chunk`), plus 2 micro-test agents for the cross-examination. A full
+run (3 reviewers + verification + report) averaged ~93k tokens, ranging from 77k to 109k.
 
-## Fallos observados y su corrección
+## Failures observed and their correction
 
-| #  | Fallo observado                                                                                                                                                                     | Corrección aplicada                                                                                    |
-|----|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
-| 1  | Sin skill: el orquestador ordenaba y deduplicaba hallazgos y lo llamaba "verificación"; los falsos quedaban arriba como CRÍTICO                                                     | Paso "Verificar": abrir el código citado, eslabón por eslabón del Camino                               |
-| 2  | "Race condition" en `writeAll()` que no existía: el único llamador nunca reutiliza el mapa                                                                                          | Cada eslabón cita código real, no un llamador hipotético                                               |
-| 3  | Cifras inventadas ("cientos de MB", "-10% GC") sin ninguna cuenta                                                                                                                   | `../references/reviewer-prompt.md`: cifras solo si se calculan desde el código, mostrando la cuenta    |
-| 4  | "Carga 100 veces por segundo" ignorando el `return` temprano de `Overworld.java:134`                                                                                                | Eslabón "Frecuencia": comprobar returns tempranos y caches entre el disparador y el código             |
-| 5  | "Si `onEvict()`/`writeChunks()` lanzan..." cuando esas llamadas solo encolan una tarea: la excepción real ocurre en el hilo trabajador                                              | Eslabón "Excepción": la línea que la lanza corre en el mismo hilo que la recibe                        |
-| 6  | Severidad ALTA por un crash que solo pasa con el archivo de guardado corrupto o editado a mano (el juego nunca lo escribe así)                                                      | Eslabón "Origen": si el estado inicial solo viene de afuera del programa, la severidad máxima es media |
-| 7  | Guardian descartó la concurrencia porque "todo corre en el hilo de tick", ignorando el hilo de escritura que vive en otro paquete                                                   | `../references/roles.md`: guardian también busca objetos que cruzan a un hilo que vive fuera del alcance |
-| 8  | El orquestador escribió el informe citando 3 revisores cuando solo había vuelto 1                                                                                                   | Paso "Esperar a todos"; el informe arranca con "Revisores: rol (n hallazgos), ..."                     |
-| 9  | Refutó el bug real de `destroyedDecoratives` con una razón que cubre una sola rama (`Set.of()` en el caso vacío) e ignora la otra (`HashSet` vivo cuando el chunk sí tiene entrada) | "Refutar exige la misma evidencia que confirmar": si el eslabón tiene ramas, hay que cubrirlas todas   |
-| 10 | Confirmó como "media" algo que el propio revisor planteaba como hipotético ("si una lista se modificara... aunque hoy se pasan snapshots")                                          | Un eslabón condicional sin código actual que lo produzca va a Refutados                                |
-| 11 | Faltaba forzar la evidencia mínima de un confirmado                                                                                                                                 | Plantilla: campos obligatorios "Disparador" y "Estado final"                                           |
-| 12 | Un subagente dejó un archivo vacío (`eldest)`) en el repo durante una revisión "de solo lectura"                                                                                    | Paso "Controlar efectos": comparar `git status --porcelain` antes y después                            |
+| #  | Failure observed                                                                                                                                                                           | Correction applied                                                                                        |
+|----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| 1  | Without the skill: the orchestrator sorted and deduplicated findings and called it “verification”; the false ones stayed on top as CRITICAL                                                | The “Verify” step: open the cited code, link by link of the Path                                          |
+| 2  | A “race condition” in `writeAll()` that did not exist: the only caller never reuses the map                                                                                                | Every link cites real code, not a hypothetical caller                                                     |
+| 3  | Invented figures (“hundreds of MB”, “-10% GC”) with no arithmetic                                                                                                                          | `reviewer-prompt.md`: figures only if computed from the code, showing the arithmetic                      |
+| 4  | “Loads 100 times per second”, ignoring the early return at `Overworld.java:134`                                                                                                            | The “Frequency” link: check early returns and caches between the trigger and the code                     |
+| 5  | “If `onEvict()`/`writeChunks()` throw...” when those calls only enqueue a task: the real exception happens on the worker thread                                                            | The “Exception” link: the line that throws it runs on the same thread that receives it                    |
+| 6  | HIGH severity for a crash that only happens with a corrupt or hand-edited save file (the game never writes it that way)                                                                    | The “Origin” link: if the initial state can only come from outside the program, the maximum is medium     |
+| 7  | Guardian dismissed the concurrency because “everything runs on the tick thread”, ignoring the writer thread that lives in another package                                                  | `roles.md`: guardian also looks for objects crossing to a thread that lives outside the scope             |
+| 8  | The orchestrator wrote the report citing 3 reviewers when only 1 had come back                                                                                                             | The “Wait for all of them” step; the report opens with “Reviewers: role (n findings), ...”                |
+| 9  | Refuted the real `destroyedDecoratives` bug with a reason covering a single branch (`Set.of()` in the empty case), ignoring the other (a live `HashSet` when the chunk does have an entry) | “Refuting demands the same evidence as confirming”: if the link has branches, all of them must be covered |
+| 10 | Confirmed as “medium” something the reviewer itself framed as hypothetical (“if a list were modified... even though snapshots are passed today”)                                           | A conditional link with no current code producing it goes to Refuted                                      |
+| 11 | The minimum evidence for a confirmed finding was not enforced                                                                                                                              | Template: mandatory “Starts at” and “Ends up as” fields                                                   |
+| 12 | A subagent left an empty file (`eldest)`) in the repo during a “read-only” review                                                                                                          | The “Check for side effects” step: compare `git status --porcelain` before and after                      |
 
-## Nunca detectado en 9 corridas
+## Never detected in 9 runs
 
-El bug real de `ChunkChanges.buildRecord` (`world/chunk/ChunkChanges.java:235`): encola el `int[][]` y el
-`HashSet` vivos sin copiarlos, así que si el jugador edita el mismo chunk mientras el hilo de escritura
-serializa, hay una carrera. Guardian pasó cerca dos veces (fallos #7 y #9) sin llegar a él. No hay regla que lo
-resuelva: es el límite de lo que un revisor ve en una sola lectura.
+The real bug in `ChunkChanges.buildRecord` (`world/chunk/ChunkChanges.java:235`): it enqueues the live `int[][]`
+and `HashSet` without copying them, so if the player edits the same chunk while the writer thread serializes,
+there is a race. Guardian came close twice (failures #7 and #9) without reaching it. No rule fixes this: it is
+the limit of what a reviewer sees in a single read.
 
-## Examen cruzado (paso 6): por qué es selectivo
+## Cross-examination (step 6): why it is selective
 
-Antes de implementarlo se corrió un micro-test de 2 agentes sobre hallazgos ya confirmados de las corridas
-anteriores, comparando la objeción de un contrapeso real contra la que el orquestador se había formulado solo.
-El resultado fue asimétrico:
+Before implementing it, a micro-test of 2 agents was run over already-confirmed findings from earlier runs,
+comparing a real counterweight's objection against the one the orchestrator had formulated on its own. The
+result was asymmetric:
 
-| Cruce                                                                            | Objeción autoformulada                               | Objeción del contrapeso real                                                                                                                                                                                                                                                                            | Veredicto                                                                   |
-|----------------------------------------------------------------------------------|------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| Guardian evalúa "agrupar escrituras en `Overworld.unloadAll()`" (de optimizer)   | "evento raro, el ahorro no justifica la complejidad" | `Overworld.java:381-396` mezcla limpieza en memoria con persistencia: saltear `onEvict()` para agrupar deja `mobsResolved` y `pendingMobRecords` sin limpiar, y el javadoc de 386-387 dice que sus entradas quedarían "huerfanas para siempre". La propuesta no se puede aplicar sin refactorizar antes | **Positivo**: obstáculo real y verificado que el orquestador no había visto |
-| Optimizer evalúa "validar offsets en `RegionFileManager.java:141`" (de guardian) | "una comparación por entrada (negligible)"           | "Costo: negligible (O(1))" — la misma conclusión. Además eligió ENMIENDA y pidió más validaciones (eje de guardian), afirmando que con `data.length < TABLE_BYTES` la línea 137 "crea un buffer mal formado" y se "leerá basura": falso, `ByteBuffer.wrap` lanza `IndexOutOfBoundsException` ahí mismo  | **Negativo**: nada nuevo en su eje, deriva de rol y una premisa falsa       |
+| Cross                                                                               | Self-formulated objection                                | Real counterweight objection                                                                                                                                                                                                                                                                                    | Verdict                                                               |
+|-------------------------------------------------------------------------------------|----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| Guardian judges “batch the writes in `Overworld.unloadAll()`” (from optimizer)      | “rare event, the saving does not justify the complexity” | `Overworld.java:381-396` mixes in-memory cleanup with persistence: skipping `onEvict()` to batch leaves `mobsResolved` and `pendingMobRecords` uncleaned, and the javadoc at 386-387 says their entries would be “orphaned forever”. The proposal cannot be applied without refactoring first                   | **Positive**: a real, verified obstacle the orchestrator had not seen |
+| Optimizer judges “validate offsets at `RegionFileManager.java:141`” (from guardian) | “one comparison per entry (negligible)”                  | “Cost: negligible (O(1))” — the same conclusion. It also chose AMENDS and asked for more validations (the guardian axis), claiming that with `data.length < TABLE_BYTES` line 137 “creates a malformed buffer” and will “read garbage”: false, `ByteBuffer.wrap` throws `IndexOutOfBoundsException` right there | **Negative**: nothing new on its axis, role drift and a false claim   |
 
-La asimetría es estructural. "¿Qué rompe este cambio?" es el trabajo del guardian, así que critica bien. "¿Cuánto
-cuesta esta validación?" casi siempre da "negligible", así que el optimizer no tiene nada real que decir en su
-eje y llena el vacío con trabajo ajeno. De ahí las tres decisiones de diseño:
+The asymmetry is structural. "What does this change break?" is guardian's job, so it criticizes well. "How much
+does this validation cost?" almost always comes out "negligible", so the optimizer has nothing real to say on
+its axis and fills the gap with someone else's work. Hence the three design decisions:
 
-1. **Filtro previo** (tabla en `../references/cross-exam-prompt.md`): se cruza solo si el eje del contrapeso toca el cambio.
-   Validaciones en código que corre una vez, renombres y borrados de código muerto quedan excluidos.
-2. **AVALA presentado como la respuesta esperada**, explícitamente no un fracaso. No se usó una prohibición ("no te
-   salgas de tu rol") porque `writing-skills` documenta que las prohibiciones se negocian bajo incentivo
-   contrario; una expectativa positiva no deja nada que negociar.
-3. **Las respuestas del examen cruzado se verifican** con las mismas reglas que los hallazgos de la ronda 1. Sin
-   eso, el reclamo falso sobre `ByteBuffer.wrap` habría entrado al informe.
+1. **A filter up front** (the table in `cross-exam-prompt.md`): cross-examine only if the counterweight's axis
+   touches the change. Validations in code that runs once, renames and dead-code deletions are excluded.
+2. **ENDORSES presented as the expected answer**, explicitly not a failure. A prohibition ("do not step outside
+   your role") was not used, because `writing-skills` documents that prohibitions get negotiated under contrary
+   incentive; a positive expectation leaves nothing to negotiate.
+3. **The cross-examination answers are verified** with the same rules as the round 1 findings. Without that,
+   the false claim about `ByteBuffer.wrap` would have made it into the report.
 
-Costo medido en el micro-test: 63k y 86k tokens por agente, porque cada uno lee las instrucciones del proyecto y
-el código de cero. Por eso el paso es selectivo y va después de la verificación: cruzar todos los hallazgos
-contra todos los roles habría llevado una corrida de ~93k a ~270k tokens.
+Cost measured in the micro-test: 63k and 86k tokens per agent, because each one reads the project instructions
+and the code from scratch. That is why the step is selective and comes after verification: cross-examining
+every finding against every role would have taken a run from ~93k to ~270k tokens.
 
-## Revisión de coherencia y primera corrida con el paso 6
+## Consistency review and the first run with step 6
 
-Una revisión de los cuatro archivos encontró seis problemas, corregidos todos:
+A review of the four files found six problems, all corrected:
 
-1. **El examen cruzado podía devolverle un hallazgo a quien lo propuso.** La tabla decidía el destino por tipo de
-   cambio, así que una propuesta de guardian que "cambia el orden de operaciones" volvía a guardian; y no cubría
-   a conservative, modernizer ni ambassador. Ahora el destino es una sola regla — el contrapeso de `../references/roles.md` — y
-   la tabla es solo el filtro de eje, con una fila por cada uno de los seis contrapesos.
-2. **Se lanzaba un rol sin probar sin avisar.** Con los roles por defecto, el contrapeso de `simplifier` es
-   `architect`, que nunca se probó. El aviso de "sin probar" ahora cubre también los roles del paso 6.
-3. **La plantilla refutaba todo hallazgo de código muerto.** Los campos Disparador y Estado final se diseñaron
-   para defectos; un hallazgo de mantenimiento consiste justamente en que no hay llamador, así que leída al pie
-   de la letra la regla "si el disparador es «ninguno hoy», va a Refutados" lo descartaba. Ahora hay dos formas:
-   **defecto** (Disparador / Camino / Estado final) y **mantenimiento** (Evidencia), esta última con severidad
-   máxima media y con reglas propias de verificación (rehacer la búsqueda, incluido el nombre como string; mirar
-   la visibilidad).
-4. **El paso 6 lanzaba agentes sin heredar las protecciones de la ronda 1**: ni esperar a todos (fallo #8), ni
-   volver a comparar `git status` (el control del paso 4 corre antes de que existan esos agentes).
-5. **La objeción del contrapeso se formulaba dos veces**: el revisor ya completa un campo "Costo" que el paso 7
-   ignoraba. Ahora parte de ese campo y lo verifica.
-6. **Una fila de "Errores comunes" no venía de ningún fallo observado** ("no guardar el informe"): eliminada.
+1. **The cross-examination could hand a finding back to whoever proposed it.** The table decided the
+   destination by kind of change, so a guardian proposal that "changes the order of operations" came back to
+   guardian; and it did not cover conservative, modernizer or ambassador. The destination is now a single rule,
+   the counterweight in `roles.md`, and the table is only the axis filter, with one row per each of the six
+   counterweights.
+2. **An untested role was launched without warning.** With the default roles, the counterweight of `simplifier`
+   is `architect`, which was never tested. The "untested" warning now also covers the roles of step 6.
+3. **The template refuted every dead-code finding.** The Starts at and Ends up as fields were designed for
+   defects; a maintenance finding consists precisely of there being no caller, so read literally the rule "if
+   the trigger is «none today», it goes to Refuted" discarded it. There are now two shapes: **defect** (Starts
+   at / Path / Ends up as) and **maintenance** (Evidence), the latter with a maximum severity of medium and
+   with its own verification rules (redo the search, including the name as a string; look at visibility).
+4. **Step 6 launched agents without inheriting the round 1 protections**: neither waiting for all of them (failure #8)
+   nor comparing `git status` again (the step 4 check runs before those agents exist).
+5. **The counterweight's objection was formulated twice**: the reviewer already fills in a "Cost" field that
+   step 7 ignored. It now starts from that field and verifies it.
+6. **One row of "Common mistakes" did not come from any observed failure** ("not saving the report"): removed.
 
-La corrida de validación sobre `io/chunk` fue la mejor de las 11 y la primera con el paso 6 activo:
+The validation run over `io/chunk` was the best of the 11 and the first with step 6 active:
 
-- El examen cruzado corrió, eligió bien el destino y los tres veredictos aparecieron: `architect` **AVALÓ** un
-  cambio de firma, `guardian` **ENMENDÓ** el agrupado de escrituras citando la invariante documentada de
-  `RegionWriteQueue` (el mismo obstáculo del micro-test, reproducido), y `optimizer` **OBJETÓ** la copia
-  defensiva en `writeAll()` por costo O (n) sin riesgo actual.
-- Esa última objeción importa: **es el hallazgo falso que el orquestador había confirmado como real en corridas
-  anteriores** (fallo #10). El examen cruzado lo frenó por sí solo, sin intervención.
-- Tres hallazgos quedaron afuera del filtro con el motivo anotado. Los tres de severidad baja se verificaron
-  contra el código y son reales.
-- Costo: **117k tokens**, o sea ~24k sobre el promedio sin paso 6, no los ~150k estimados — el filtro deja afuera
-  la mitad de los hallazgos y los agentes de la ronda 2 leen mucho menos código que los de la ronda 1.
+- The cross-examination ran, picked the destination correctly, and all three verdicts appeared: `architect`
+  **ENDORSED** a signature change, `guardian` **AMENDED** the write batching, citing the documented invariant of
+  `RegionWriteQueue` (the same obstacle from the micro-test, reproduced), and `optimizer` **OBJECTED** to the
+  defensive copy in `writeAll()` on O (n) cost with no current risk.
+- That last objection matters: **it is the false finding the orchestrator had confirmed as real in earlier
+  runs** (failure #10). The cross-examination stopped it on its own, with no intervention.
+- Three findings were left out by the filter with the reason recorded. All three low-severity ones were
+  verified against the code and are real.
+- Cost: **117k tokens**, that is ~24k over the average without step 6, not the ~150k estimated. The filter
+  leaves out half the findings, and the round 2 agents read far less code than the round 1 ones.
 
-Dos detalles menores que se dejaron sin corregir por inocuos: el agente respondió en inglés (el prompt de prueba
-hablaba de un usuario abstracto, no del usuario real), y clasificó dos hallazgos de costo como "mantenimiento"
-en vez de defecto, completando igual campos que sostienen el hallazgo.
+Two minor details left uncorrected as harmless: the agent answered in English (the test prompt spoke of an
+abstract user, not the real one), and it classified two cost findings as "maintenance" instead of defect,
+filling in the fields that hold the finding up anyway.
 
-## Premisa central (paso 5): tomado del repo `consejo-7-sabios`
+## Key claim (step 5): taken from the `consejo-7-sabios` repo
 
-Una lectura del código de ese repo —no solo del README— mostró que **sí tiene verificación**, en
-`consensus.py:543` (`verify_plan_claims`), conectada en `orchestrator.py:662`: un subagente Verifier adversarial
-por tarea, con presupuesto de herramientas sin tope, que rehace los conteos y las afirmaciones de existencia. Su
-pieza más fuerte es `_enforce_core_refutation()`: el modelo marca `is_core: true` en la afirmación que *es* la
-justificación de la tarea, y después **código Python** —no el modelo— fuerza que una premisa central refutada
-refute la tarea entera. El docstring documenta que eso arregla una falla de calibración del 2026-05-30, donde una
-tarea con premisa refutada se suavizó a "weakened" y sobrevivió en el plan: el mismo fallo #10 de esta tabla.
+Reading that repo's code, not just its README, showed that it **does have verification**, in `consensus.py:543`
+(`verify_plan_claims`), wired in at `orchestrator.py:662`: one adversarial Verifier subagent per task, with an
+uncapped tool budget, redoing the counts and the existence claims. Its strongest piece is
+`_enforce_core_refutation()`: the model marks `is_core: true` on the claim that *is* the task's justification,
+and then **Python code**, not the model, forces a refuted core claim to refute the whole task. The docstring
+documents that this fixed a calibration failure of 2026-05-30, where a task with a refuted claim was softened
+to "weakened" and survived in the plan: the same failure #10 of this table.
 
-De ahí se tomó el mecanismo de **premisa central**, adaptado a lo que un markdown puede hacer:
+The **key claim** mechanism was taken from there, adapted to what a Markdown file can do:
 
-- La nombra el orquestador, no el revisor (igual que allá la marca el verificador, no el sabio: quien propone
-  elige la parte más fácil de defender).
-- Se nombra **antes** de verificar, que es lo único que corta el retrofit posterior ("en realidad lo importante
-  era esta otra cosa, que sí se cumple").
-- Una premisa refutada **no se suaviza**: no baja a dudoso, no baja de severidad y no se reformula como un
-  hallazgo más chico. Lo que quede en pie es un hallazgo nuevo con su propia verificación.
-- Sin equivalente al guard determinista: acá la regla depende igual de que el modelo la aplique. Lo más cerca es
-  que "Premisa central" sea un campo obligatorio de la plantilla, así no completarlo se nota.
+- The orchestrator names it, not the reviewer (just as over there the verifier marks it, not the sage: whoever
+  proposes picks the part easiest to defend).
+- It is named **before** verifying, which is the only thing that cuts off the later retrofit ("what really
+  mattered was this other thing, which does hold").
+- A refuted claim **is not softened**: it does not drop to doubtful, it does not drop a severity level, and it
+  is not reworded into a smaller finding. What still stands is a new finding with its own verification.
+- No equivalent to the deterministic guard: here the rule still depends on the model applying it. The closest
+  thing is making "Key claim" a mandatory template field, so failing to fill it in is noticeable.
 
-Corrida de validación sobre `world/chunk` (121k tokens), resultado **partido**:
+Validation run over `world/chunk` (121k tokens), a **split** result:
 
-- **Lo que mejoró:** 3 refutados de 5, contra 0 en todas las corridas anteriores. Refutó los dos hallazgos de
-  guardian, uno de ellos exactamente de la clase del fallo #5 ("si falla la escritura en `onEvict`"), con el
-  argumento correcto: encola asincrónicamente y la excepción solo sale en `flush()`.
-- **Lo que no:** los dos confirmados son débiles. Uno propone mover el guard de `Zone.DUNGEON` fuera de
-  `ChunkChanges`, contra una decisión documentada en `CLAUDE.md`, en dos javadoc y fijada por el test
-  `destroyDecorative_dungeonZone_throws`. El otro eligió como premisa "se mapea dos veces sobre el mismo
-  Optional" —literalmente cierto— cuando los dos `.map()` extraen campos distintos y no hay trabajo repetido: el
-  mecanismo fallando por el otro lado, con una premisa elegida demasiado débil desde el principio en vez de
-  retrofiteada después.
+- **What improved:** 3 refuted out of 5, against 0 in every earlier run. It refuted both guardian findings, one
+  of them exactly of the class of failure #5 ("if the write in `onEvict` fails"), with the correct argument: it
+  enqueues asynchronously and the exception only surfaces in `flush()`.
+- **What did not:** the two confirmed ones are weak. One proposes moving the `Zone.DUNGEON` guard out of
+  `ChunkChanges`, against a decision documented in `CLAUDE.md`, in two javadocs and pinned by the
+  `destroyDecorative_dungeonZone_throws` test. The other picked as its claim "it maps twice over the same
+  Optional", literally true, when the two `.map()` calls extract different fields and there is no repeated
+  work: the mechanism failing from the other side, with a claim chosen too weak from the start rather than
+  retrofitted afterwards.
 
-Dos correcciones aplicadas a partir de esa corrida, **las dos sin probar todavía**: elegir la premisa por su
-carga y no por su literalidad (con el test "si esto fuera falso, ¿el hallazgo muere?"), y contar un javadoc que
-explique el comportamiento o un test que lo fije como evidencia de que está puesto a propósito, al mismo nivel que
-un documento del proyecto.
+Two corrections applied from that run, **both still untested**: choose the claim by its load and not by its
+literalness (with the test "if this were false, does the finding die?"), and count a javadoc that explains the
+behaviour or a test that pins it down as evidence that it is there on purpose, at the same level as a project
+document.
 
-## Sin probar
+## Untested
 
-- Los roles `conservative`, `modernizer` y `ambassador`: nunca se lanzaron. `architect` solo actuó una vez, como
-  contrapeso en el examen cruzado, no como revisor de ronda 1. `SKILL.md` obliga a marcarlos como "sin probar" en
-  el informe si alguien los usa.
-- El guardado en `council-report-<fecha>.md` **en el directorio de trabajo**: la corrida de validación lo escribió
-  en un directorio temporal para no dejar archivos en el repo del usuario. Conviene que el repo tenga
-  `council-report-*.md` en su `.gitignore`.
+- The `conservative`, `modernizer` and `ambassador` roles: never launched. `architect` acted only once, as a
+  counterweight in the cross-examination, not as a round 1 reviewer. `SKILL.md` requires marking them as
+  "untested" in the report if anyone uses them.
+- Saving to `council-report-<date>.md` **in the working directory**: the validation run wrote it to a temporary
+  directory so as not to leave files in the user's repo. The repo should have `council-report-*.md` in its
+  `.gitignore`.

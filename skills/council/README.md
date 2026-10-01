@@ -75,7 +75,7 @@ the file it leaves behind.**
 | Situation                                       | Use                 |
 |-------------------------------------------------|---------------------|
 | Code you just wrote or touched                  | your review command |
-| A package you suspect, or are about to refactor | **`/council`**      |
+| A package you suspect, or are about to refactor | `/council`          |
 | Markdown, config, or a handful of small scripts | You read it!        |
 
 Most of what it costs goes into verifying findings. On code with no threads, no hot paths and no persisted

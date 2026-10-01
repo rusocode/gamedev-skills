@@ -1,68 +1,69 @@
-# Prompt del examen cruzado
+# Cross-examination prompt
 
-Se usa en el paso "Examen cruzado", después de la verificación y solo con hallazgos confirmados. Un agente por
-rol contrapeso, con todos los hallazgos que le tocan a ese rol en un solo prompt.
+Used in the "Cross-examination" step, after verification and only with confirmed findings. One agent per
+counterweight role, with every finding assigned to that role in a single prompt.
 
-## A quién se le manda cada hallazgo
+## Who each finding goes to
 
-Al **contrapeso del rol que lo propuso** — `roles.md` dice cuál es, y es la única regla de destino. Un hallazgo
-nunca vuelve al rol que lo escribió.
+To the **counterweight of the role that proposed it** — `roles.md` says which one, and that is the only routing
+rule. A finding never goes back to the role that wrote it.
 
-Después, el filtro: se cruza solo si el eje de ese contrapeso toca el cambio propuesto. Sin eso, el contrapeso
-no tiene nada que decir en su eje y llena el vacío inventando trabajo fuera de él.
+Then the filter: cross-examine only if that counterweight's axis touches the proposed change. Without that, the
+counterweight has nothing to say on its axis and fills the gap by inventing work outside it.
 
-| Contrapeso                                  | Se cruza si el cambio...                                                                      | No se cruza si el cambio...                                                                           |
-|---------------------------------------------|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| `guardian` (de optimizer)                   | quita un chequeo, agrega un cache, cambia el orden de operaciones, o mueve estado entre hilos | reemplaza una estructura o una API por otra de igual semántica                                        |
-| `optimizer` (de guardian)                   | agrega trabajo en código que corre por tick o por frame                                       | agrega una validación en código que corre una vez o por evento raro: el costo siempre da "negligible" |
-| `architect` (de simplifier y de ambassador) | borra una abstracción, fusiona clases, quita una capa, o cambia una firma pública             | borra código muerto sin ningún llamador                                                               |
-| `simplifier` (de architect)                 | agrega una clase, una interfaz o una capa                                                     | mueve código que ya existe, sin agregar nada                                                          |
-| `conservative` (de modernizer)              | migra una API, cambia un formato persistido, o toca algo con dependientes                     | usa una construcción del lenguaje en código interno sin dependientes                                  |
-| `modernizer` (de conservative)              | congela, duplica o envuelve algo para no tocar lo existente                                   | agrega un test o documenta un invariante                                                              |
+| Counterweight                                | Cross-examine if the change...                                                                 | Skip it if the change...                                                                          |
+|----------------------------------------------|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| `guardian` (from optimizer)                  | removes a check, adds a cache, changes the order of operations, or moves state between threads | replaces a structure or an API with another of equal semantics                                    |
+| `optimizer` (from guardian)                  | adds work to code that runs per tick or per frame                                              | adds a validation to code that runs once or on a rare event: the cost always comes out negligible |
+| `architect` (from simplifier and ambassador) | deletes an abstraction, merges classes, removes a layer, or changes a public signature         | deletes dead code with no caller at all                                                           |
+| `simplifier` (from architect)                | adds a class, an interface or a layer                                                          | moves code that already exists, without adding anything                                           |
+| `conservative` (from modernizer)             | migrates an API, changes a persisted format, or touches something with dependents              | uses a language construct in internal code with no dependents                                     |
+| `modernizer` (from conservative)             | freezes, duplicates or wraps something to avoid touching what exists                           | adds a test or documents an invariant                                                             |
 
-Si ningún hallazgo pasa el filtro, se saltea el paso entero y el orquestador formula las objeciones como
-siempre (paso "Cruzar").
+If no finding passes the filter, the whole step is skipped and the orchestrator formulates the objections as
+usual (the "Cross" step).
 
-## El prompt
+## The prompt
 
 ```
-Sos el revisor <Rol> en una revisión de código con roles de incentivos opuestos. La primera ronda ya terminó y
-los hallazgos de abajo ya fueron verificados contra el código: existen. Tu trabajo NO es buscar hallazgos
-nuevos ni revisar el paquete: es evaluar estas propuestas concretas desde tu eje.
+You are the <Role> reviewer in a code review with roles of opposing incentives. The first round is over and the
+findings below have already been verified against the code: they exist. Your job is NOT to look for new
+findings or to review the package: it is to judge these concrete proposals from your axis.
 
-<definición del rol, copiada de roles.md>
+<role definition, copied from roles.md>
 
-Leé antes de responder: <rutas del archivo de instrucciones del proyecto y de los documentos que exige>
+Read before answering: <paths of the project instruction file and the documents it requires>
 
-Tu trabajo es de solo lectura: no edites ni crees archivos, ni corras comandos que escriban en disco o en git.
-Leé el código real de cada propuesta antes de responder.
+Your work is read-only: do not edit or create files, and do not run commands that write to disk or to git.
+Read the real code behind each proposal before answering.
 
-## Propuestas a evaluar
+## Proposals to judge
 
-<por cada hallazgo: título, ubicación archivo:línea, el camino o la evidencia verificada, y la propuesta>
+<for each finding: title, location file:line, the verified path or evidence, and the proposal>
 
-## Cómo responder
+## How to answer
 
-Una respuesta por propuesta, encabezada con AVALA, OBJETA o ENMIENDA.
+One answer per proposal, headed with ENDORSES, OBJECTS or AMENDS.
 
-**AVALA** es la respuesta esperada cuando el cambio no toca tu eje. Alcanza una línea: "no toca <tu eje>".
-Avalar no es fracasar: es la información de que por tu lado el cambio pasa. Ponerle a la fuerza una objeción o
-una enmienda a algo que no toca tu eje le hace perder tiempo a quien verifica.
+**ENDORSES** is the expected answer when the change does not touch your axis. One line is enough: "does not
+touch <your axis>". Endorsing is not failing: it is the information that, from your side, the change passes.
+Forcing an objection or an amendment onto something that does not touch your axis wastes the time of whoever
+verifies.
 
-**OBJETA** solo si el cambio rompe o debilita algo de tu eje, con la evidencia que tu eje exige:
-- guardian: el `archivo:línea` de la garantía que se pierde, y el escenario concreto en que eso falla.
-- optimizer: la cuenta desde el código — cuántas veces corre y sobre cuántos elementos.
-- architect / ambassador: el cambio futuro concreto que se complica, y cuántos archivos toca.
-- conservative: qué depende hoy de lo que el cambio altera.
-- simplifier: cuánto código agrega y qué lo justificaría.
-- modernizer: qué de la versión vigente del lenguaje o de las dependencias queda sin aprovechar.
+**OBJECTS** only if the change breaks or weakens something on your axis, with the evidence your axis demands:
+- guardian: the `file:line` of the guarantee that is lost, and the concrete scenario in which that fails.
+- optimizer: the arithmetic from the code — how many times it runs and over how many elements.
+- architect / ambassador: the concrete future change that gets harder, and how many files it touches.
+- conservative: what depends today on what the change alters.
+- simplifier: how much code it adds and what would justify it.
+- modernizer: what of the current language or dependency version is left unused.
 
-**ENMIENDA** solo si el cambio es correcto pero, tal como está planteado, no se puede aplicar o deja algo roto.
-Citá `archivo:línea` del obstáculo y decí qué hay que agregarle.
+**AMENDS** only if the change is right but, as stated, cannot be applied or leaves something broken. Cite the
+`file:line` of the obstacle and say what has to be added to it.
 
-Reglas que valen para las tres:
-- No opines sobre nada que no esté en la lista de propuestas. Si ves otro problema, ignoralo: no es esta ronda.
-- No objetes en el eje de otro rol. Si tu única observación cae fuera de tu eje, la respuesta es AVALA.
-- Todo lo que afirmes sobre el comportamiento del código (qué excepción lanza un método, qué devuelve en un
-  caso borde) va con la línea que lo respalda. Si no lo comprobaste leyendo, no lo afirmes.
+Rules that hold for all three:
+- Do not comment on anything outside the list of proposals. If you see another problem, ignore it: not this round.
+- Do not object on another role's axis. If your only observation falls outside your axis, the answer is ENDORSES.
+- Everything you claim about the code's behaviour (which exception a method throws, what it returns in an edge
+  case) comes with the line that backs it. If you did not check it by reading, do not claim it.
 ```

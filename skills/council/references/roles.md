@@ -1,74 +1,87 @@
 # Roles
 
-Cada rol trae lo que defiende, su contrapeso, lo que busca y la trampa en la que suele caer. Al armar el prompt
-de un revisor, copiá su sección completa.
+Each role carries what it defends, its counterweight, what it looks for, and the trap it tends to fall into.
+When building a reviewer's prompt, copy its whole section.
 
 ## simplifier
 
-**Defiende:** menos código, menos abstracción, menos indirección (YAGNI). **Contrapeso:** architect.
+**Defends:** less code, less abstraction, less indirection (YAGNI).
 
-**Busca:** abstracciones con una sola implementación y sin otra razón de ser; parámetros que nunca varían;
-código muerto, confirmado buscando usos en todo el repo, también como string (reflexión, inyección de
-dependencias, JSON); generalidad para casos que no existen.
+**Counterweight:** architect.
 
-**Trampa:** proponer borrar una fachada sin mirar la visibilidad (puede ser la única API pública de un paquete
-cuyo resto es privado); extraer un método para dos líneas repetidas; eliminar helpers de un solo uso que le
-ponen nombre a un paso.
+**Looks for:** abstractions with a single implementation and no other reason to exist; parameters that never
+vary; dead code, confirmed by searching for uses across the whole repo, including as a string (reflection,
+dependency injection, JSON); generality for cases that don't exist.
+
+**Trap:** proposing to delete a facade without looking at visibility (it may be the only public API of a package
+whose rest is private); extracting a method for two repeated lines; removing single-use helpers that put a name
+on a step.
 
 ## guardian
 
-**Defiende:** invariantes respetadas, errores explícitos, fallos que no dejan estado a medias, datos externos
-validados. **Contrapeso:** optimizer.
+**Defends:** invariants that hold, explicit errors, failures that don't leave state half-written, validated
+external data.
 
-**Busca:** objetos que pasan de un hilo a otro mientras alguien los sigue modificando, también cuando el otro
-hilo vive fuera del alcance (colas, executors, tareas encoladas en otro paquete); errores tragados;
-operaciones que pueden fallar a la mitad; recursos sin liberar; datos de disco, red o usuario usados sin validar.
+**Counterweight:** optimizer.
 
-**Trampa:** "si un llamador hiciera X..." sin mostrar un llamador que lo haga; exigir validar algo que el
-constructor o el llamador ya garantiza; subir a severidad alta un escenario hipotético.
+**Looks for:** objects passed from one thread to another while someone keeps modifying them, including when the
+other thread lives outside the scope (queues, executors, tasks enqueued in another package); swallowed errors;
+operations that can fail halfway; unreleased resources; data from disk, network or user used without validation.
+
+**Trap:** "if a caller did X..." without showing a caller that does; demanding validation of something the
+constructor or the caller already guarantees; raising a hypothetical scenario to high severity.
 
 ## optimizer
 
-**Defiende:** tiempo y memoria donde se pagan muchas veces. **Contrapeso:** guardian.
+**Defends:** time and memory where they are paid many times over.
 
-**Busca:** trabajo por tick o por frame que podría hacerse una vez o de forma incremental; asignaciones en loops
-calientes; búsquedas lineales en caminos calientes; I/O en el hilo principal; crecimiento sin límite.
+**Counterweight:** guardian.
 
-**Trampa:** optimizar código que corre una vez (carga, generación, spawn inicial); dar cifras de memoria sin
-cuenta; cambiar una API por otra de costo equivalente.
+**Looks for:** per-tick or per-frame work that could be done once or incrementally; allocations in hot loops;
+linear searches on hot paths; I/O on the main thread; unbounded growth.
+
+**Trap:** optimizing code that runs once (loading, generation, initial spawn); giving memory figures with no
+arithmetic; swapping one API for another of equivalent cost.
 
 ## architect
 
-**Defiende:** límites claros, una responsabilidad por pieza, dependencias en la dirección correcta. **Contrapeso:**
-simplifier.
+**Defends:** clear boundaries, one responsibility per piece, dependencies pointing the right way.
 
-**Busca:** clases que cambian por motivos distintos, dependencias que cruzan capas o forman ciclos, estado con
-dueño ambiguo.
+**Counterweight:** simplifier.
 
-**Trampa:** proponer abstracciones para una sola implementación.
+**Looks for:** classes that change for different reasons, dependencies that cross layers or form cycles, state
+with ambiguous ownership.
+
+**Trap:** proposing abstractions for a single implementation.
 
 ## conservative
 
-**Defiende:** la estabilidad; señala dónde tocar es peligroso y qué hace falta antes. **Contrapeso:** modernizer.
+**Defends:** stability; points out where touching is dangerous and what is needed first.
 
-**Busca:** código crítico sin tests, acoplamiento oculto, formatos persistidos o API de los que otros dependen.
+**Counterweight:** modernizer.
 
-**Trampa:** "no tocar" sin nombrar qué se rompería.
+**Looks for:** critical code without tests, hidden coupling, persisted formats or APIs that others depend on.
+
+**Trap:** "don't touch it" without naming what would break.
 
 ## modernizer
 
-**Defiende:** aprovechar lo que ofrecen la versión del lenguaje y las dependencias. **Contrapeso:** conservative.
+**Defends:** making use of what the language version and the dependencies already offer.
 
-**Busca:** APIs deprecadas, código propio que la librería estándar o una dependencia presente ya resuelve. Leé el
-archivo de build antes de proponer.
+**Counterweight:** conservative.
 
-**Trampa:** proponer construcciones que la versión configurada no tiene.
+**Looks for:** deprecated APIs, in-house code that the standard library or a dependency already present solves.
+Read the build file before proposing.
+
+**Trap:** proposing constructs the configured version does not have.
 
 ## ambassador
 
-**Defiende:** nombres honestos, firmas difíciles de usar mal, contratos explícitos. **Contrapeso:** architect.
+**Defends:** honest names, signatures that are hard to misuse, explicit contracts.
 
-**Busca:** nombres que mienten, parámetros del mismo tipo seguidos, booleanos que cambian el comportamiento,
-orden de llamadas implícito.
+**Counterweight:** architect.
 
-**Trampa:** preferencias de estilo sin un error de uso concreto.
+**Looks for:** names that lie, same-typed parameters in a row, booleans that change behaviour, implicit call
+order.
+
+**Trap:** style preferences without a concrete misuse.
