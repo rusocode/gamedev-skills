@@ -124,11 +124,19 @@ def check_map_renders(skill_dir):
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 if result.returncode != 0:
                     label = rel(map_path) + (f" (variant {variant})" if variant else "")
-                    detail = result.stderr.strip().splitlines()
-                    if len(detail) > RENDER_ERROR_LINES:
-                        detail = detail[:RENDER_ERROR_LINES] + [f"... ({len(detail) - RENDER_ERROR_LINES} more lines)"]
+                    detail = trim_error_lines(result.stderr.strip().splitlines())
                     errors.append(f"{label}: render failed\n    " + "\n    ".join(detail))
     return errors
+
+
+def trim_error_lines(lines):
+    """Caps a render's stderr at RENDER_ERROR_LINES; a traceback keeps its tail, where the exception is."""
+    if len(lines) <= RENDER_ERROR_LINES:
+        return lines
+    hidden = f"... ({len(lines) - RENDER_ERROR_LINES} more lines)"
+    if lines[0].startswith("Traceback"):
+        return [hidden] + lines[-RENDER_ERROR_LINES:]
+    return lines[:RENDER_ERROR_LINES] + [hidden]
 
 
 def markdown_files():
