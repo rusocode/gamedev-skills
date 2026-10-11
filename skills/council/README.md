@@ -14,13 +14,14 @@ below covers the first two; [roles.md](references/roles.md) has all three, plus 
 | `simplifier`   | Less code, less abstraction, less indirection  | `architect`    | yes    |
 | `guardian`     | Invariants, explicit errors, validated input   | `optimizer`    | yes    |
 | `optimizer`    | Time and memory where they're paid many times  | `guardian`     | yes    |
-| `architect`    | Clear boundaries, dependencies pointing right  | `simplifier`   | no     |
-| `conservative` | Stability; where it's dangerous to touch       | `modernizer`   | no     |
-| `modernizer`   | Using what the language version already offers | `conservative` | no     |
-| `ambassador`   | Honest names, signatures hard to misuse        | `architect`    | no     |
+| `architect`    | Clear boundaries, dependencies pointing right  | `simplifier`   | yes    |
+| `conservative` | Stability; where it's dangerous to touch       | `modernizer`   | yes    |
+| `modernizer`   | Using what the language version already offers | `conservative` | yes    |
+| `ambassador`   | Honest names, signatures hard to misuse        | `architect`    | yes    |
 
-**The four untested roles were written but never run against real code. The skill flags them as untested in the
-report header, so a finding from one of them is a suggestion, not a measurement.**
+All seven roles went through test rounds against real code; the runs, the failures and the fixes are in
+[docs/DESIGN-LOG.md](docs/DESIGN-LOG.md). `architect` needed the most: its first two runs drifted into dead code and
+duplication, which belong to other roles, until its Output shape required naming the boundary.
 
 ## Installation
 

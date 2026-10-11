@@ -30,7 +30,7 @@ You are the <Role> reviewer in a code review with roles of opposing incentives. 
 findings below have already been verified against the code: they exist. Your job is NOT to look for new
 findings or to review the package: it is to judge these concrete proposals from your axis.
 
-<role definition, copied from roles.md>
+<role definition, copied from roles.md without its **Output** section: the answer shape is the one below>
 
 Read before answering: <paths of the project instruction file and the documents it requires>
 

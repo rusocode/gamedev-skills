@@ -23,10 +23,9 @@ this skill is to verify, not to collect.
 - Roles: a comma-separated list, or `all`. Defaults to `simplifier, guardian, optimizer`.
 - The definitions live in `references/roles.md`. If they ask for a role that isn't there, list the valid ones
   and stop.
-- `simplifier`, `guardian` and `optimizer` went through several test rounds against real code; `architect`,
-  `conservative`, `modernizer` and `ambassador` did not. Mark them as "untested" in the report header if they
-  are in the list, and also if the cross-examination (step 6) launches one as a counterweight — with the default
-  roles, the counterweight of `simplifier` is `architect`, so it can happen without the user asking.
+- All seven roles went through test rounds against real code (see `docs/DESIGN-LOG.md`). A role added later
+  without one has to be marked "untested" in the report header if it is in the list, and also if the
+  cross-examination (step 6) launches it as a counterweight, which can happen without the user asking.
 
 ## Process
 
@@ -99,8 +98,8 @@ this skill is to verify, not to collect.
    cross-examination, start from the "Cost" field the reviewer already wrote and verify it like any other
    statement; if it does not hold up or was left empty, formulate the objection yourself. Mark in the report
    which ones came from a real reviewer.
-8. **Save the report.** Write it to `council-report-<YYYY-MM-DD>.md`, in the working directory, using the
-   template below. If one with that date already exists, append `-2`, `-3`, and so on. That way the report
+8. **Save the report.** Write it to `council-report-<YYYY-MM-DD>.md`, at the root of the repository (the working
+   directory if it is not a git repo, never inside the reviewed path), using the template below. If one with that date already exists, append `-2`, `-3`, and so on. That way the report
    survives the conversation being compacted or the session being closed.
 9. **Report** in the chat: the same content as the file, plus a first line with the path where it was saved.
    Write it in the language the user is writing to you in, which is not necessarily the language of these
@@ -112,7 +111,7 @@ Template:
 ## Council on <path> — <roles>
 
 Reviewers: <role> (<n> findings), <role> (<n>), ...
-<if any role in the list is "untested": one line saying so, with the names>
+<if any role in the list has no test round: one line saying so, with the names>
 
 <1-3 lines: the most important thing the verification produced>
 

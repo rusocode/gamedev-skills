@@ -14,10 +14,12 @@ Scope: <path>
 Read before reviewing: <paths of the project instruction file and the documents it requires, or "none">
 
 Your work is read-only: do not create, edit or delete files, and do not run commands that write to disk or to
-git (no `>` redirections either). Read the files in scope in full. When a finding depends on how the code is
-used, search for the callers across the whole repo.
+git (no `>` redirections either). Read the files in scope in full, each one on its own, so every line number you
+cite is that file's own. When a finding depends on how the code is used, search for the callers across the whole
+repo.
 
-Return between 0 and 5 findings. There are two shapes, depending on what you report.
+Return between 0 and 5 findings. If your role definition above has an **Output** section, every finding uses
+that shape and the two below do not apply to you. Otherwise there are two shapes, depending on what you report.
 
 **Defect** — something breaks, gets corrupted, or costs more than it should:
 
