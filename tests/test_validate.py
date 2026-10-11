@@ -18,6 +18,13 @@ description: >-
 """
 
 
+def temp_dir(test):
+    """A fresh temp directory that is removed when the test finishes."""
+    tmp = tempfile.TemporaryDirectory()
+    test.addCleanup(tmp.cleanup)
+    return Path(tmp.name)
+
+
 def write(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
@@ -39,7 +46,7 @@ class FrontmatterTest(unittest.TestCase):
 
 class SkillFileTest(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp())
+        self.tmp = temp_dir(self)
 
     def check(self, folder, text):
         return validate.check_skill_file(write(self.tmp / folder / "SKILL.md", text))
@@ -71,7 +78,7 @@ class SkillFileTest(unittest.TestCase):
 
 class LinkTest(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp())
+        self.tmp = temp_dir(self)
         write(self.tmp / "docs" / "guide.md", "# Guide\n")
 
     def test_reports_broken_relative_link(self):
@@ -93,7 +100,7 @@ class LinkTest(unittest.TestCase):
 
 class CodeReferenceTest(unittest.TestCase):
     def test_reports_missing_bundled_file(self):
-        skill = Path(tempfile.mkdtemp()) / "demo-skill"
+        skill = temp_dir(self) / "demo-skill"
         write(skill / "scripts" / "tool.py", "")
         md = write(skill / "SKILL.md", "Run `scripts/tool.py`, then read `references/missing.md`.\n")
         errors = validate.check_code_refs(md)
@@ -103,7 +110,7 @@ class CodeReferenceTest(unittest.TestCase):
 
 class MapLibraryTest(unittest.TestCase):
     def setUp(self):
-        self.skill = Path(tempfile.mkdtemp()) / "demo-skill"
+        self.skill = temp_dir(self) / "demo-skill"
         write(self.skill / "assets" / "listed.txt", "")
         write(self.skill / "assets" / "unlisted.txt", "")
 
@@ -118,6 +125,27 @@ class MapLibraryTest(unittest.TestCase):
         path = write(self.skill / "assets" / "potion.txt",
                      "# variante azul: R=1,2,3\n# variant green: R=4,5,6\n. = transparent\n")
         self.assertEqual(validate.map_variants(path), ["azul", "green"])
+
+
+class TrimErrorLinesTest(unittest.TestCase):
+    def lines(self, count):
+        return [f"line {i}" for i in range(count)]
+
+    def test_short_output_is_untouched(self):
+        self.assertEqual(validate.trim_error_lines(self.lines(3)), self.lines(3))
+
+    def test_long_error_keeps_its_head(self):
+        trimmed = validate.trim_error_lines(["ERROR: bad map"] + self.lines(20))
+        self.assertEqual(trimmed[0], "ERROR: bad map")
+        self.assertEqual(len(trimmed), validate.RENDER_ERROR_LINES + 1)
+        self.assertIn("more lines", trimmed[-1])
+
+    def test_long_traceback_keeps_its_tail_where_the_exception_is(self):
+        trimmed = validate.trim_error_lines(["Traceback (most recent call last):"] + self.lines(20)
+                                            + ["RuntimeError: boom"])
+        self.assertEqual(trimmed[-1], "RuntimeError: boom")
+        self.assertEqual(len(trimmed), validate.RENDER_ERROR_LINES + 1)
+        self.assertIn("more lines", trimmed[0])
 
 
 if __name__ == "__main__":

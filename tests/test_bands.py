@@ -66,12 +66,13 @@ class BandsTest(unittest.TestCase):
 
     def test_matches_brute_force_bfs_on_random_shapes(self):
         rng = random.Random(1234)
-        for _ in range(20):
+        for i in range(20):
             w, h = rng.randint(4, 16), rng.randint(4, 16)
             spans = random_spans(rng, w, h)
             if not spans:
                 continue
-            self.assertEqual(bands.bands(spans, w, h), brute_force_layer(spans, w, h))
+            with self.subTest(i=i, w=w, h=h, spans=spans):
+                self.assertEqual(bands.bands(spans, w, h), brute_force_layer(spans, w, h))
 
     def test_rejects_a_span_outside_the_canvas(self):
         with self.assertRaises(ValueError):
