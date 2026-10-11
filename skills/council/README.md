@@ -43,7 +43,7 @@ reviewer saves you nothing; it just moves work onto the step that costs the most
 
 Unlike drawing-pixel-art, Council never triggers on its own. You invoke it by command:
 
-```text
+```bash
 # Audit the package with the default roles
 /council src/world/chunk
 # Audit the package with the guardian and optimizer roles
