@@ -7,7 +7,7 @@ the PNG, so you don't end up with flat or broken shapes.
 
 ## Installation
 
-_[Python 3](https://www.python.org/downloads/) to run the skill's scripts is required._
+_Requires [Python 3](https://www.python.org/downloads/) to run the skill's scripts._
 
 ```bash
 # Install the skill
@@ -19,7 +19,7 @@ pip install pillow
 
 ## Recommended model
 
-Use the most capable model your agent offers, with extended reasoning on (for example, Opus). The checks catch broken or
+Use the most capable model your agent offers (for example, Opus), with extended reasoning on. The checks catch broken or
 flat sprites, but not whether the drawing is good, so a less capable model can deliver sprites that pass
 every check and still look bland.
 
@@ -88,5 +88,5 @@ drawing-pixel-art/
 ├── references/
 │   ├── shapes.md    # Ready-made circles by diameter, for round shapes
 │   └── ramps.md     # Default hue-shifted stone, iron and wood ramps
-└── assets/          # Approved maps: the library new sprites start from
+└── assets/          # Approved maps (the library new sprites start from) and the README image
 ```

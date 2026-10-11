@@ -63,7 +63,7 @@ You never type the skill's name for pixel art. Mentioning "sprite", "texture", "
 **Council is the exception.** It only runs when you call it by name, because an audit reads a whole package and
 takes minutes, which is not something you want set off by a passing remark:
 
-```bash
+```text
 /council src/world/chunk
 ```
 

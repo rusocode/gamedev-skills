@@ -3,21 +3,21 @@
 Audits a file or directory with [roles](references/roles.md) that have opposing incentives, then verifies every
 finding against the code before it reaches you. What you get back is short and true, not long and padded.
 
-An AI review is easy to inflate, ask for problems and you get problems, whether or not they exist. **Council's main
+An AI review is easy to inflate: ask for problems and you get problems, whether or not they exist. **Council's main
 job is not collecting findings, it's refuting them.**
 
 Each role defends one thing, is priced by one counterweight, and has one trap it tends to fall into. The table
 below covers the first two; [roles.md](references/roles.md) has all three, plus what each role goes looking for.
 
-| Role           | Defends                                        | Counterweight  | Tested |
-|----------------|------------------------------------------------|----------------|--------|
-| `simplifier`   | Less code, less abstraction, less indirection  | `architect`    | yes    |
-| `guardian`     | Invariants, explicit errors, validated input   | `optimizer`    | yes    |
-| `optimizer`    | Time and memory where they're paid many times  | `guardian`     | yes    |
-| `architect`    | Clear boundaries, dependencies pointing right  | `simplifier`   | yes    |
-| `conservative` | Stability; where it's dangerous to touch       | `modernizer`   | yes    |
-| `modernizer`   | Using what the language version already offers | `conservative` | yes    |
-| `ambassador`   | Honest names, signatures hard to misuse        | `architect`    | yes    |
+| Role           | Defends                                        | Counterweight  |
+|----------------|------------------------------------------------|----------------|
+| `simplifier`   | Less code, less abstraction, less indirection  | `architect`    |
+| `guardian`     | Invariants, explicit errors, validated input   | `optimizer`    |
+| `optimizer`    | Time and memory where they're paid many times  | `guardian`     |
+| `architect`    | Clear boundaries, dependencies pointing right  | `simplifier`   |
+| `conservative` | Stability; where it's dangerous to touch       | `modernizer`   |
+| `modernizer`   | Using what the language version already offers | `conservative` |
+| `ambassador`   | Honest names, signatures hard to misuse        | `architect`    |
 
 All seven roles went through test rounds against real code; the runs, the failures and the fixes are in
 [docs/DESIGN-LOG.md](docs/DESIGN-LOG.md). `architect` needed the most: its first two runs drifted into dead code and
@@ -37,13 +37,13 @@ complaints and calling that verification. Preventing exactly that is the reason 
 
 If your agent can hand subagents a different model, the reviewers are the safe place to spend less, since their
 mistakes are what the checking step is there to catch. Don't take them to the cheapest tier, though. A noisier
-reviewer saves you nothing, it just moves work onto the step that costs the most.
+reviewer saves you nothing; it just moves work onto the step that costs the most.
 
 ## Usage
 
-Unlike the other skills in this repo, Council never triggers on its own. You invoke it by command:
+Unlike drawing-pixel-art, Council never triggers on its own. You invoke it by command:
 
-```bash
+```text
 # Audit the package with the default roles
 /council src/world/chunk
 # Audit the package with the guardian and optimizer roles
@@ -56,7 +56,7 @@ _Roles default to `simplifier, guardian, optimizer`. Pass a comma-separated list
 
 ### Choosing the roles
 
-Naming the roles that match the code is the cheapest way to make a run worth its cost, a reviewer with nothing to
+Naming the roles that match the code is the cheapest way to make a run worth its cost: a reviewer with nothing to
 look for still reads the whole package, and then invents something to justify the trip.
 
 | What you're auditing             | Roles worth naming         |
@@ -67,7 +67,7 @@ look for still reads the whole package, and then invents something to justify th
 | Something you're about to change | `guardian, conservative`   |
 | A public API others depend on    | `ambassador, conservative` |
 
-### When to use it!
+### When to use it
 
 > [!IMPORTANT]
 > **Council is an audit, not a review. Run it occasionally, against one package you have reason to distrust, and keep
@@ -77,7 +77,7 @@ the file it leaves behind.**
 |-------------------------------------------------|---------------------|
 | Code you just wrote or touched                  | your review command |
 | A package you suspect, or are about to refactor | `/council`          |
-| Markdown, config, or a handful of small scripts | You read it!        |
+| Markdown, config, or a handful of small scripts | You read it         |
 
 Most of what it costs goes into verifying findings. On code with no threads, no hot paths and no persisted
 formats, most roles have nothing to bite on, and you pay for reviewers that read the whole package to report
@@ -89,7 +89,7 @@ nothing.
    about a single thing and ignore the rest. They work apart and never see each other's notes, so nobody agrees
    with anybody out of politeness.
 2. **It makes sure nobody touched your files.** The reviewers are only supposed to read. "Supposed to" is not a
-   promise, so the skill takes a snapshot before and after and shows you anything that moved.
+   promise, so in a git repo the skill takes a snapshot before and after and shows you anything that moved.
 3. **It tries to prove every complaint wrong.** This is where most of the work goes. For each complaint it first
    writes down, in one sentence, the thing the complaint depends on. If that sentence turns out to be false, the
    complaint is dead. Only then does it open the code and check. Writing the sentence down *first* is the whole
@@ -99,7 +99,7 @@ nothing.
    wants less code is answered by whoever wants clear structure. Complaints that survive step 3 get handed to
    that opponent, but only when they actually have something to say. Nobody is asked to price a change they
    don't care about; that just invites them to make something up.
-5. **It writes everything down.** The result goes to a `council-report-<date>.md` file next to your code, so it
+5. **It writes everything down.** The result goes to a `council-report-<date>.md` file at the root of your repository (or the working directory outside git), so it
    outlives the chat.
 
 One rule holds the whole thing together. **A complaint that fails step 3 doesn't get to shrink into a smaller
@@ -109,7 +109,7 @@ wringer from the start.
 
 ### What you get
 
-A file named `council-report-<date>.md`, saved in your working directory, and the same content in the chat.
+A file named `council-report-<date>.md`, saved at the root of your repository (or the working directory outside git), and the same content in the chat.
 Complaints arrive already sorted into four lists, and that sorting is most of what you are paying for.
 
 | List          | What is in it                                                                | What you do with it   |
@@ -158,7 +158,7 @@ Council trades recall for precision, on purpose. Know which side of that trade y
 
 ```
 council/
-├── SKILL.md                       # Instructions for the agent: process, verification rules, report template
+├── SKILL.md                        # Instructions for the agent: process, verification rules, report template
 ├── README.md                       # Installation and human-facing usage
 ├── references/
 │   ├── roles.md                    # Roles, counterweights, and traps
