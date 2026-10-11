@@ -38,6 +38,7 @@ PREVIEW_BG = (90, 110, 70, 255)
 FLAT_CHECK_MIN_SIDE = 24    # smaller icons legitimately have few tones
 FLAT_MIN_TONES = 6          # fill symbols (outline excluded) below this = flat
 FLAT_MAX_DOMINANT = 40      # % of fill pixels in one tone above this = flat
+COVERAGE_MIN = 70           # % of the canvas the sprite's longest side should fill (SKILL.md step 3)
 DIRS = ((1, 0), (-1, 0), (0, 1), (0, -1))
 
 
@@ -240,14 +241,19 @@ def paint_pixels(grid, palette, transparent, is_transparent, w, h, args):
     return img, fill_count, fill_syms, leaks, (min_x, min_y, max_x, max_y)
 
 
+def canvas_coverage(bw, bh, w, h):
+    """% of the canvas the sprite's bounding box fills on its longest side."""
+    return round(100 * max(bw / w, bh / h))
+
+
 def check_bounds(min_x, min_y, max_x, max_y, w, h, bleed):
     """Reports the sprite's bounding box, canvas coverage, and edge-margin warning."""
     bw, bh = max_x - min_x + 1, max_y - min_y + 1
-    cov = round(100 * max(bw / w, bh / h))
+    cov = canvas_coverage(bw, bh, w, h)
     lines = [f"sprite bounds: cols {min_x}..{max_x}, rows {min_y}..{max_y} ({bw} x {bh}): "
              f"fills {cov}% of the canvas on its longest side"]
-    if cov < 70:
-        lines.append("WARNING: sprite uses under 70% of the canvas; enlarge the silhouette unless the sprite is meant to be small")
+    if cov < COVERAGE_MIN:
+        lines.append(f"WARNING: sprite uses under {COVERAGE_MIN}% of the canvas; enlarge the silhouette unless the sprite is meant to be small")
     if min_x == 0 or min_y == 0 or max_x == w - 1 or max_y == h - 1:
         if bleed:
             lines.append("bleed: sprite fills its cell to the edge, as declared")
@@ -287,6 +293,20 @@ def check_outline_leaks(leaks, args):
     return None
 
 
+def flood_transparent(queue, seen, is_transparent, w, h):
+    """Drains `queue` of already-seen transparent cells, marking their 4-connected transparent
+    neighbours in `seen`, and yields every cell it visits (the seeds included).
+    """
+    while queue:
+        x, y = queue.popleft()
+        yield x, y
+        for dx, dy in DIRS:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and is_transparent(nx, ny):
+                seen[ny][nx] = True
+                queue.append((nx, ny))
+
+
 def find_holes(is_transparent, w, h):
     """Flood-fills from the canvas border to mark the outside, then returns one description per
     remaining enclosed transparent region -- a ring, the gap between a bow and its string, a
@@ -294,23 +314,13 @@ def find_holes(is_transparent, w, h):
     """
     seen = [[False] * w for _ in range(h)]
     queue = deque()
-    for x in range(w):
-        for y in (0, h - 1):
-            if is_transparent(x, y) and not seen[y][x]:
-                seen[y][x] = True
-                queue.append((x, y))
-    for y in range(h):
-        for x in (0, w - 1):
-            if is_transparent(x, y) and not seen[y][x]:
-                seen[y][x] = True
-                queue.append((x, y))
-    while queue:
-        x, y = queue.popleft()
-        for dx, dy in DIRS:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and is_transparent(nx, ny):
-                seen[ny][nx] = True
-                queue.append((nx, ny))
+    border = [(x, y) for x in range(w) for y in (0, h - 1)] + [(x, y) for y in range(h) for x in (0, w - 1)]
+    for x, y in border:
+        if is_transparent(x, y) and not seen[y][x]:
+            seen[y][x] = True
+            queue.append((x, y))
+    for _ in flood_transparent(queue, seen, is_transparent, w, h):
+        pass
 
     holes = []
     for y in range(h):
@@ -320,15 +330,9 @@ def find_holes(is_transparent, w, h):
             size, hx0, hy0, hx1, hy1 = 0, x, y, x, y
             seen[y][x] = True
             queue.append((x, y))
-            while queue:
-                cx, cy = queue.popleft()
+            for cx, cy in flood_transparent(queue, seen, is_transparent, w, h):
                 size += 1
                 hx0, hx1, hy0, hy1 = min(hx0, cx), max(hx1, cx), min(hy0, cy), max(hy1, cy)
-                for dx, dy in DIRS:
-                    nx, ny = cx + dx, cy + dy
-                    if 0 <= nx < w and 0 <= ny < h and not seen[ny][nx] and is_transparent(nx, ny):
-                        seen[ny][nx] = True
-                        queue.append((nx, ny))
             holes.append(f"cols {hx0}..{hx1}, rows {hy0}..{hy1} ({size} px)")
     return holes
 
@@ -453,12 +457,35 @@ def render(args):
 
 # ----------------------------------------------------------------------------- from-png
 
+def snap_to_known(color, by_color, tolerance):
+    """Symbol of a known color within `tolerance` per channel of `color`, or None. Editors and
+    GDI+ round translucent colors by a unit or two; those should reuse the existing symbol.
+    """
+    for known, sym in by_color.items():
+        if max(abs(a - b) for a, b in zip(known, color)) <= tolerance:
+            return sym
+    return None
+
+
+def new_symbol(color, used, next_idx, args):
+    """Picks a symbol for a color the palette lacks: the outline symbol for a dark one while it is
+    free, else the next unused letter of the alphabet. Returns (symbol, next alphabet index).
+    """
+    if args.outline_symbol not in used and color[0] + color[1] + color[2] < 120:
+        return args.outline_symbol, next_idx
+    while next_idx < len(args.alphabet):
+        cand, next_idx = args.alphabet[next_idx], next_idx + 1
+        if cand not in used:
+            return cand, next_idx
+    raise MapError(f"more than {len(args.alphabet)} colors; reduce the palette first")
+
+
 def from_png(args):
     """Rebuild a map from a PNG so a sprite edited in an image editor becomes the source again."""
     sym_color = {}          # symbol -> rgba as declared (variant applied)
     header = []
     transparent = args.transparent_symbol
-    old_palette_lines = []
+    base_palette = {}       # symbol -> rgba as declared in the old map (no variant applied)
     variant_syms = set()    # symbols any '# variant:' line recolors; keep them even if unused in this PNG
     if args.palette:
         old = parse_map(args.palette)
@@ -468,7 +495,6 @@ def from_png(args):
         sym_color = dict(base_palette)
         if args.variant:
             apply_variant(sym_color, old["variants"], args.variant)
-        old_palette_lines = list(old["palette"].keys())
         for spec in old["variants"].values():
             variant_syms.update(re.findall(r"(\S)\s*=", spec))
     by_color = {rgba: sym for sym, rgba in sym_color.items()}
@@ -486,23 +512,12 @@ def from_png(args):
                 row.append(transparent)
                 continue
             if c not in by_color and args.tolerance > 0:
-                # Editors and GDI+ round translucent colors by a unit or two; snap those to the existing symbol.
-                for known, sym in list(by_color.items()):
-                    if max(abs(a - b) for a, b in zip(known, c)) <= args.tolerance:
-                        by_color[c] = sym
-                        snapped += 1
-                        break
+                snapped_sym = snap_to_known(c, by_color, args.tolerance)
+                if snapped_sym is not None:
+                    by_color[c] = snapped_sym
+                    snapped += 1
             if c not in by_color:
-                sym = None
-                if args.outline_symbol not in used and c[0] + c[1] + c[2] < 120:
-                    sym = args.outline_symbol
-                while sym is None:
-                    if next_idx >= len(args.alphabet):
-                        raise MapError(f"more than {len(args.alphabet)} colors; reduce the palette first")
-                    cand = args.alphabet[next_idx]
-                    next_idx += 1
-                    if cand not in used:
-                        sym = cand
+                sym, next_idx = new_symbol(c, used, next_idx, args)
                 by_color[c] = sym
                 used.add(sym)
                 order.append(c)
@@ -519,14 +534,13 @@ def from_png(args):
     lines = list(header)
     lines.append(f"{transparent} = transparent")
     dropped, kept_for_variant = [], []
-    for sym in old_palette_lines:
-        if sym in present:
-            lines.append(f"{sym} = {color_text(base_palette[sym])}")
-        elif sym in variant_syms:
-            lines.append(f"{sym} = {color_text(base_palette[sym])}")
-            kept_for_variant.append(sym)
-        else:
+    for sym, rgba in base_palette.items():
+        if sym not in present and sym not in variant_syms:
             dropped.append(sym)
+            continue
+        lines.append(f"{sym} = {color_text(rgba)}")
+        if sym not in present:
+            kept_for_variant.append(sym)
     for c in order:
         lines.append(f"{by_color[c]} = {color_text(c)}")
     lines.append("")
@@ -586,7 +600,7 @@ def audit(args):
     xs = [x for y in range(h) for x in range(w) if get[x, y][3] > 0]
     ys = [y for y in range(h) for x in range(w) if get[x, y][3] > 0]
     bw, bh = max(xs) - min(xs) + 1, max(ys) - min(ys) + 1
-    cov = round(100 * max(bw / w, bh / h))
+    cov = canvas_coverage(bw, bh, w, h)
 
     out = [f"{args.png}: {w}x{h}, {len(px)} opaque px, bbox {bw}x{bh} ({cov}% of the canvas)",
            f"colours: {len(counts)} ({once} used by a single pixel, {semi} semi-transparent)",
@@ -607,7 +621,7 @@ def audit(args):
     if flat:
         verdict.append(f"FLAT: {len(tones)} fill tones, dominant {dom_pct}% "
                        f"(needs >= {FLAT_MIN_TONES} tones and <= {FLAT_MAX_DOMINANT}%). Step 7.")
-    if cov < 70:
+    if cov < COVERAGE_MIN:
         verdict.append(f"SMALL: fills {cov}% of the canvas. Step 3.")
 
     if not verdict:
